@@ -1,3 +1,9 @@
+## DLD front panel
+### Matlab based GUI for He* BEC experiment raw data processing and visualisation
+######################
+Creator: Bryce Henson
+######################
+
 This is a upgraded version of the Classic dld_front_panel.
 -suports reading in TXY files
 	-checks that they were modified after the TDC data file. IF not reconvert
