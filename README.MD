@@ -7,6 +7,14 @@ Matlab based GUI for He* BEC experiment basic data visualization and analysis
 |:--:| 
  **Figure1**- The Gui  |
  
+ | ![Two Dimensional Histogram](/pics/1d.png "Fig2") | 
+|:--:| 
+ **Figure2**- Two dimensional histogram of some test data.   |
+ 
+ | ![Count Rate](/pics/2d.png "Fig3") | 
+|:--:| 
+ **Figure3**- A one dimensional hisogram of the counts rate as a functiuon of time.  |
+ 
  
 
 ## To Do
