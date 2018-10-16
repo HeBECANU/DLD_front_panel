@@ -3,6 +3,8 @@ function dld_plot_tof(hObject,handles) %integrated to 1d plots
 %it should be upgraded to do bimodal fits and then use 2.58, 7.144 from pethick
 %to calc T/Tc
  
+
+num_files = handles.files_imported;
 t_window_min=str2double(get(handles.t_window_min_h,'String'));
 t_window_max=str2double(get(handles.t_window_max_h,'String'));
 T_bin_width=str2double(get(handles.time_binsize,'String'));
@@ -22,6 +24,7 @@ else
     width=1;
 end
 sfigure(150);
+fig = gcf;
 
 
 
@@ -35,20 +38,21 @@ if get(handles.oned_time_checkbox,'Value')
     %set(handles.status_handle ,'String',['No Counts in 2d Window']);
     %set(handles.time_binsize,'String',num2str(T_bin_width)); %upate the
     %used odd bins time window
-    T_bin=linspace(t_window_min,t_window_max,T_bin_num);
-    [TOF_counts,edges]=histcounts(handles.txy_data_windowed(:,1),T_bin);
+    %change the max time so that whole bins can fit
+    T_bin=linspace(t_window_min,t_window_min+T_bin_width*T_bin_num,T_bin_num);
+    [T1d_counts,edges]=histcounts(handles.txy_data_windowed(:,1),T_bin);
     t_centers=mean([edges(1:end-1);edges(2:end)]);
-    ydat=10^-3*TOF_counts/T_bin_width;
-    plot(t_centers,ydat,'k')
+    T1d_counts=1e-3*T1d_counts/(T_bin_width*num_files);
+    plot(t_centers,T1d_counts,'k')
     xlabel('t, time(s)');
-    ylabel('Count Rate(kHz)');
+    ylabel('Count Rate(kHz/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(1,:,:)=fit_cond(hObject,handles,t_centers,ydat,1);
+            bmparam(1,:,:)=fit_cond(hObject,handles,t_centers,T1d_counts,1);
         else  
-            fit_therm(hObject,handles,t_centers,ydat,1,0);
+            fit_therm(hObject,handles,t_centers,T1d_counts,1,0);
         end
     end
 
@@ -62,10 +66,10 @@ if get(handles.oned_X_checkbox,'Value')
     X_bin_width=(xmax-xmin)/xybins;
     [X1d_counts,X1d_edges]=histcounts(handles.txy_data_windowed(:,2),X_bin);
     X1d_centers=mean([X1d_edges(1:end-1);X1d_edges(2:end)]);
-
-    plot(X1d_centers*1000,X1d_counts/X_bin_width,'k')
+    X1d_counts=1e-3*X1d_counts/(X_bin_width*num_files);
+    plot(X1d_centers*1000,X1d_counts,'k')
     xlabel('x(mm)');
-    ylabel('Linear Count Density (m^{-1})');
+    ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
@@ -86,10 +90,10 @@ if get(handles.oned_Y_checkbox,'Value')
     Y_bin_width=(ymax-ymin)/xybins;
     [Y1d_counts,Y1d_edges]=histcounts(handles.txy_data_windowed(:,3),Y_bin);
     Y1d_centers=mean([Y1d_edges(1:end-1);Y1d_edges(2:end)]);
-  
+    Y1d_counts=1e-3*Y1d_counts/(Y_bin_width*num_files);
     plot(Y1d_centers*1000,Y1d_counts/Y_bin_width,'k')
     xlabel('y(mm)');
-    ylabel('Linear Count Density (m^{-1})');
+    ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
@@ -117,26 +121,45 @@ if get(handles.FFT_checkbox,'Value')
     use_window=1; %turn on the hamming window function
     start_clip=2; %clip the first n points from the fft to hide DC spike
     dispcount=2;
+%     fig.xlim
     if get(handles.oned_time_checkbox,'Value')
         subplot(totdisplays,width,dispcount)
+        fft_ax = gca;
+        f_window = fft_ax.XLim;
+        h_window = fft_ax.YLim;
         dispcount=dispcount+width;
-        L=length(TOF_counts);
+        L=length(T1d_counts);
         Fs=1/T_bin_width;
         if use_window
-            fftdat = fft(hamming(L)'.*TOF_counts/T_bin_width);    
+            fftdat = fft(hamming(L)'.*T1d_counts);    
         else
-            fftdat = fft(TOF_counts/T_bin_width);   
+            fftdat = fft(T1d_counts);   
         end
-        P2 = abs(fftdat/L);
-        P1 = P2(1:L/2+1);
-        P1(2:end-1) = 2*P1(2:end-1);
-        f = Fs*(0:(L/2))/L;
+        P = abs(fftdat/L);
+        P(2:end-1) = 2*P(2:end-1); 
+        f = (0:L-1)*Fs/L;
+        % if mod(size(x,1),2)==0
+        %      error('odd Len')
+        % end
+        if mod(L,2)~=0 %odd
+            f = f(1:(L+1)/2);
+            P=P(1:(L+1)/2);
+        else %even
+            f = f(1:L/2);  % sample fs/2
+            P=P(1:L/2);
+        end
+        
         f=f(start_clip:end); %remove part of the DC spike
-        P1=P1(start_clip:end);
+        P=P(start_clip:end);
         if get(handles.FFT_log_checkbox,'Value')
-            semilogy(f,P1,'k')
+            semilogy(f,P,'k')
         else
-            plot(f,P1,'k')
+            plot(f,P,'k')
+        end
+
+        if get(handles.zoom_checkbox, 'Value')
+            fft_ax.YLim = h_window;
+            fft_ax.XLim = f_window;
         end
         if use_window
         title('Single-Sided Amplitude Spectrum (hamming)')
@@ -145,7 +168,7 @@ if get(handles.FFT_checkbox,'Value')
         end
         set(gcf,'Color',[1 1 1]);
         xlabel('f (Hz)')
-        ylabel('Flux amplitude modulation in Hz |P1(f)|')
+        ylabel('Flux amplitude modulation in KHz/File |P1(f)|')
     end
      if get(handles.oned_X_checkbox,'Value')
         subplot(totdisplays,width,dispcount)
@@ -157,16 +180,26 @@ if get(handles.FFT_checkbox,'Value')
         else
             fftdat = fft(X1d_counts/X_bin_width);   
         end
-        P2 = abs(fftdat/L);
-        P1 = P2(1:L/2+1);
-        P1(2:end-1) = 2*P1(2:end-1);
-        f = Fs*(0:(L/2))/L;
+        P = abs(fftdat/L);
+        P(2:end-1) = 2*P(2:end-1); 
+        f = (0:L-1)*Fs/L;
+        % if mod(size(x,1),2)==0
+        %      error('odd Len')
+        % end
+        if mod(L,2)~=0 %odd
+            f = f(1:(L+1)/2);
+            P=P(1:(L+1)/2);
+        else %even
+            f = f(1:L/2);  % sample fs/2
+            P=P(1:L/2);
+        end
+        
         f=f(start_clip:end); %remove part of the DC spike
-        P1=P1(start_clip:end);
+        P=P(start_clip:end);
         if get(handles.FFT_log_checkbox,'Value')
-            semilogy(f,P1,'k')
+            semilogy(f,P,'k')
         else
-            plot(f,P1,'k')
+            plot(f,P,'k')
         end
         if use_window
         title('Single-Sided Amplitude Spectrum (hamming)')
@@ -175,7 +208,7 @@ if get(handles.FFT_checkbox,'Value')
         end
         set(gcf,'Color',[1 1 1]);
         xlabel('f (Hz)')
-        ylabel('Flux amplitude modulation in m^{-1} |P1(f)|')
+        ylabel('Flux amplitude modulation in m^{-1}/File |P1(f)|')
      end
      if get(handles.oned_Y_checkbox,'Value')
         subplot(totdisplays,width,dispcount)
@@ -187,16 +220,27 @@ if get(handles.FFT_checkbox,'Value')
         else
             fftdat = fft(Y1d_counts/Y_bin_width);   
         end
-        P2 = abs(fftdat/L);
-        P1 = P2(1:L/2+1);
-        P1(2:end-1) = 2*P1(2:end-1);
-        f = Fs*(0:(L/2))/L;
+        P = abs(fftdat/L);
+        P(2:end-1) = 2*P(2:end-1); 
+        f = (0:L-1)*Fs/L;
+        % if mod(size(x,1),2)==0
+        %      error('odd Len')
+        % end
+        if mod(L,2)~=0 %odd
+            f = f(1:(L+1)/2);
+            P=P(1:(L+1)/2);
+        else %even
+            f = f(1:L/2);  % sample fs/2
+            P=P(1:L/2);
+        end
+        
         f=f(start_clip:end); %remove part of the DC spike
-        P1=P1(start_clip:end);
+        P=P(start_clip:end);
+        
         if get(handles.FFT_log_checkbox,'Value')
-            semilogy(f,P1,'k')
+            semilogy(f,P,'k')
         else
-            plot(f,P1,'k')
+            plot(f,P,'k')
         end
         if use_window
         title('Single-Sided Amplitude Spectrum (hamming)')
@@ -205,7 +249,7 @@ if get(handles.FFT_checkbox,'Value')
         end
         set(gcf,'Color',[1 1 1]);
         xlabel('f (Hz)')
-        ylabel('Flux amplitude modulation in m^{-1} |P1(f)|')
+        ylabel('Flux amplitude modulation in m^{-1}/File |P1(f)|')
     end
     
     

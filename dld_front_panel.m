@@ -26,51 +26,48 @@ function varargout = dld_front_panel(varargin)
 
 % Edit the above text to modify the response to help dld_front_panel
 
-% Last Modified by GUIDE v2.5 31-Oct-2016 20:52:24
+% Last Modified by GUIDE v2.5 29-Jun-2018 15:42:39
 
-% Begin initialization code - DO NOT EDIT
+
 
 %Improvement Log--------------------------------------------------------------------------
-%enter usable on 2d plot time limits
+%v9 done
+%fix bug if no files imported
+%error message if not enough counts in tof to plot
 
-%single button moitor
+%V9 plans
+%import all with cashing
+%update import script
+%monitor indiciaror
+%robust,faster monitoring
+%constants file
 
-%return to idle status when using 2d plot
 
-%fixed bug when monitoring txt files
+%V8
+%added in hold functionality for FFT
+%correct normalization of fft with number of files
 
-%got rid of glitch in monitor when mon set to txy but import notby having
-%the checkbox change the other
-
-%added log scale for 2d plots
-
-%made import faster by setting each files data to cell then combining at
-%end instead of prev which was combining at each file import
-
-%fixed FFT code, added log option
-%Simplified TOF code
-
-%fixed crash when 2d window empty
+%V7:
+%Added perceptually uniform colormaps 
+%Fixed logscale blurring
 
 %Known BUGS/ possible Improvements--------------------------------------------------------
 %ocasional runtime bug with monitor
-%add avg pos code
 %fix TOF winowing for no counts case/specify bins for histogram
 %idiot proof min max values
 %faster TF fit
 %the monitor indicator ... is broken
-%change two button arangement for the monitor to one that changes
-%1d projections of atom profiles
-%option to make 2d projection 3d(counts)
 %catch zero counts to histogram
-%scale count density on hist to include the number of files
-%movie option
+%import all option or incremental import
+%clean up code to use more struct variables
+
+
 
 %while drawnow update prevents focus stealing you cant use the buttons! for
 %example to stop the import
 
 
-
+% Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
@@ -89,7 +86,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before dld_front_panel is made visible.
 function dld_front_panel_OpeningFcn(hObject, eventdata, handles, varargin)
 
@@ -97,7 +93,7 @@ function dld_front_panel_OpeningFcn(hObject, eventdata, handles, varargin)
 %These are some tweaks for the program that are a bit to complex for the
 %gui
 
-
+handles.files_imported=0;
 handles.falldist = .848; %fall distance of 848mm
 handles.falltime = .416; %fall time of 416ms
 handles.trapfreqrad=500;
@@ -130,10 +126,12 @@ handles.temp_fit = 0;
 handles.spatial_fit = 0;
 handles.free_run_mon_bool = 0;
 handles.tof_distribution = 0;   %global variable corresponding to checkbox which determines which tof fit to use
-
+handles.hold_Zoom = 0;
 
 % Update handles structure
 guidata(hObject, handles);
+
+
 
 % UIWAIT makes dld_front_panel wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -152,7 +150,6 @@ if (isempty(input))
 end
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function filename_load_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to filename_load (see GCBO)
@@ -165,11 +162,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Outputs from this function are returned to the command line.
 function varargout = dld_front_panel_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
-
 
 % --- Executes on button press in pushbutton1 (read data button).
 function pushbutton1_Callback(hObject, eventdata, handles)
@@ -201,13 +196,13 @@ filename_input = get(handles.filename_load,'String');
 % end
 
 three_channel_output = [];
-
 num_files_s = get(handles.num_files_h,'String');
 num_files = str2double(num_files_s);
 
 start_file_s = get(handles.start_file_h,'String');
 start_file = str2double(start_file_s);
 
+files_imported=0;
 number_hits = 0;
 num_hits_mat = [];
 three_channel_output = [];
@@ -215,22 +210,20 @@ low_files=0;
 set(handles.num_low_files,'String',low_files);
 refresh(dld_front_panel)
 for n = 1:num_files
-   
     current_file=start_file+n-1;
+    no_file=0;%flag if there was not a file
     if ~get(handles.pushbutton1,'UserData') %checks if the stop button has been pressed
         current_file_s = num2str(current_file);
-
         filename_no_ext = [filename_input,current_file_s];
         filename_with_ext = [filename_input,current_file_s,'.txt'];
 
         set(handles.status_handle ,'String',['Reading File',current_file_s]);
         %drawnow update; %this updates without stealing focus (like pause(1e-5))
-        pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
+        pause(1e-6)%this updates without stealing focus but allows button press unlike drawnow update
         if get(handles.TXY_checkbox,'Value')
             %if the txy does not exist make it
             if ~fileExists([filename_input,'_txy_forc',current_file_s,'.txt']) &&...
                 fileExists(filename_with_ext)
-                %filestotxy=filestotxy+1;
                 disp('txy does not exist, converting')
                 dld_raw_to_txy(filename_input,current_file,current_file);
             %if both exists and the txt is newer than (converted) txy then
@@ -255,89 +248,65 @@ for n = 1:num_files
 
             %catch if the TXY does not exist
             if ~fileExists([filename_input,'_txy_forc',current_file_s,'.txt'])
-                enableButtons(handles);
-                return
+                fprintf('file number %i does not exist \n',current_file)
+                no_file=1;
+                %enableButtons(handles);
+                %return
+            else
+                three_channel_output_single=txy_importer(filename_input,current_file_s);
             end
-            three_channel_output_single=txy_importer(filename_input,current_file_s);
         else
             if fileExists(filename_with_ext)
                 three_channel_output_single=dld_read_5channels_reconst_multi_imp([filename_input,current_file_s],1,0,1,0);
             else
-                enableButtons(handles);
-                return
+                fprintf('file number %i does not exist \n',current_file)
+                no_file=1;
+                three_channel_output_single=[];
             end
         end
-
-    %     if ~bool_fileExists   %if the read file doesn't exist, reset buttons and return function
-    %         enableButtons(handles);
-    %         return
-    %     end
-
-        %change the mouse cursor to an hourglass
-        %set(handles.figure1,'Pointer','watch');
-
-        number_hits_single=size(three_channel_output_single,1);
-
-     %   [number_hits_single,three_channel_output_single] = dld_read_5channels_reconst_multi_a(filename_no_ext,1,1,0);
-         if number_hits_single < 1000   %return sub 100 hits in file
-             disp('zero counts encountered')
-             low_files=low_files+1;
-             set(handles.num_low_files,'String',low_files);
-    %         enableButtons(handles);
-    %         return
-         end
-        number_hits = number_hits + number_hits_single;
-        num_hits_mat = cat(1,num_hits_mat,number_hits_single);
-
-
-        if length(num_hits_mat)>1
-             set(handles.num_hits_avg ,'String',mean(num_hits_mat));
-             set(handles.num_hits_SD ,'String',std(num_hits_mat));
-        end
-
-        rot_angle = str2double(get(handles.rot_angle_h,'String'));
-        three_channel_output_sorted_rot = [];
-
-        if rot_angle ~=0
-            three_channel_output_raw = three_channel_output_single;
-            sin_theta = sin(rot_angle);
-            cos_theta = cos(rot_angle);
-
-            three_channel_output_sorted_rot(:,1) = three_channel_output_raw(:,1);
-            three_channel_output_sorted_rot(:,2) = three_channel_output_raw(:,2)*cos_theta - three_channel_output_raw(:,3)*sin_theta;
-            three_channel_output_sorted_rot(:,3) = three_channel_output_raw(:,2)*sin_theta + three_channel_output_raw(:,3)*cos_theta;
-
-            three_channel_output_single = three_channel_output_sorted_rot;
-        end
-
-        %this is a terrible way to do it as memory has to be moved evry
-        %time
-
-        three_channel_output{n+1}=three_channel_output_single;
-        
-
-        %change the mouse cursor to an arrow
-        %set(handles.figure1,'Pointer','arrow');
-        set(handles.status_handle ,'String','Idle');
-        
-
-        %     if (isempty(three_channel_output))
-        %         three_channel_output = three_channel_output_read;
-        %     else
-        %         three_channel_output = cat(1,three_channel_output,three_channel_output_read);
-        %     end
-        
-        set(handles.num_hits_handle ,'String',num2str(number_hits));
-        
-        pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
+        if ~no_file %is there a file to process
+            number_hits_single=size(three_channel_output_single,1);
+            if number_hits_single < 1000   %return sub 100 hits in file
+                disp('zero counts encountered')
+                low_files=low_files+1;
+                set(handles.num_low_files,'String',low_files);
+            else
+                files_imported=files_imported+1;
+            end
+            number_hits = number_hits + number_hits_single;
+            num_hits_mat = cat(1,num_hits_mat,number_hits_single);
+            if length(num_hits_mat)>1
+                set(handles.num_hits_avg ,'String',mean(num_hits_mat));
+                set(handles.num_hits_SD ,'String',std(num_hits_mat));
+            end
+            rot_angle = str2double(get(handles.rot_angle_h,'String'));
+            three_channel_output_sorted_rot = [];
+            if rot_angle ~=0
+                three_channel_output_raw = three_channel_output_single;
+                sin_theta = sin(rot_angle);
+                cos_theta = cos(rot_angle);
+                three_channel_output_sorted_rot(:,1) = three_channel_output_raw(:,1);
+                three_channel_output_sorted_rot(:,2) = three_channel_output_raw(:,2)*cos_theta - three_channel_output_raw(:,3)*sin_theta;
+                three_channel_output_sorted_rot(:,3) = three_channel_output_raw(:,2)*sin_theta + three_channel_output_raw(:,3)*cos_theta;
+                three_channel_output_single = three_channel_output_sorted_rot;
+            end
+            three_channel_output{n}=three_channel_output_single;
+            set(handles.status_handle ,'String','Idle');
+            set(handles.num_hits_handle ,'String',num2str(number_hits));
+            pause(1e-5)%update screen
+        end%is there a file to process
     end%stop condition
+end%looping over files
 
-end%main file loop
+if files_imported~=0
+    %need to handle the fail case better
+    three_channel_output=vertcat(three_channel_output{:});
+else
+    three_channel_output=[];
+end
+assignin('base','numhits',num_hits_mat); %asigns to the main matlab workspace
 
-three_channel_output=vertcat(three_channel_output{:});
-
-assignin('base','numhits',num_hits_mat);
-
+handles.files_imported=files_imported; 
 handles.txy_data = three_channel_output;
 handles.num_hits = number_hits;
 
@@ -356,11 +325,8 @@ if handles.auto_press_3d %make this one last so that the 3d rotate can work
     plot_3d_button_Callback(hObject, eventdata, guidata(hObject)) 
 end
 
-
 set(handles.pushbutton1,'UserData',1); %gets the button ready to run again
 set(handles.pushbutton1,'String','Read Data')
-
-
 
 function disableButtons(handles)
 %change the mouse cursor to an hourglass
@@ -369,18 +335,17 @@ function disableButtons(handles)
 %disable all the buttons so they cannot be pressed
 set(handles.pushbutton1,'Enable','off');
 
-
 function enableButtons(handles)
 %change the mouse cursor to an arrow
 %set(handles.figure1,'Pointer','arrow');
 
 %enable all the buttons so they can be pressed
 set(handles.pushbutton1,'Enable','on');
-
-
 % --- Executes on button press in tof_button.
 function tof_button_Callback(hObject, eventdata, handles)
 if handles.num_hits <10
+    set(handles.status_handle ,'String','Not Enough Counts to Plot TOF');
+    pause(1e-5)
     return
 end
 
@@ -399,9 +364,6 @@ pause(1e-5)%this updates without stealing focus but allows button press unlike d
 
 guidata(hObject, handles);
 
-
-
-
 function time_binsize_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of time_binsize as text
 %        str2double(get(hObject,'String')) returns contents of time_binsize as a double
@@ -415,9 +377,6 @@ end
 
 guidata(hObject, handles);
 
-
-
-
 % --- Executes during object creation, after setting all properties.
 function time_binsize_CreateFcn(hObject, eventdata, handles)
 % Hint: edit controls usually have a white background on Windows.
@@ -425,8 +384,6 @@ function time_binsize_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function t_window_max_h_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of t_window_max_h as text
@@ -441,8 +398,6 @@ end
 
 guidata(hObject, handles);
 
-
-
 % --- Executes during object creation, after setting all properties.
 function t_window_max_h_CreateFcn(hObject, eventdata, handles)
 % Hint: edit controls usually have a white background on Windows.
@@ -450,8 +405,6 @@ function t_window_max_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function t_window_min_h_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of t_window_min_h as text
@@ -467,13 +420,11 @@ end
 
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function t_window_min_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in temp_fit_checkbox.
 function temp_fit_checkbox_Callback(hObject, eventdata, handles)
@@ -485,7 +436,6 @@ else
 end
 % Update handles structure
 guidata(hObject, handles);
-
 
 % --- Executes on button press in plot_2d_button.
 function plot_2d_button_Callback(hObject, eventdata, handles)
@@ -501,12 +451,9 @@ plot_2d(hObject,handles)
 % pixel_size_x_s = num2str(pixel_size_x);
 guidata(hObject, handles);
 
-
-%
 % pixel_size_y = bins_per_pix*.013158;
 % pixel_size_x_s = num2str(pixel_size_x);
 % set(handles.pixel_size_x_h ,'String',pixel_size_x_s);
-
 function t_min_2d_handle_Callback(hObject, eventdata, handles)
 % hObject    handle to t_min_2d_handle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -524,14 +471,11 @@ end
 
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function t_min_2d_handle_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function t_max_2d_handle_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
@@ -544,14 +488,11 @@ end
 
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function t_max_2d_handle_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function ymin_h_Callback(hObject, eventdata, handles)
 
@@ -565,13 +506,11 @@ end
 
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function ymin_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 function xmin_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
@@ -590,8 +529,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function xmax_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
 
@@ -608,8 +545,6 @@ function xmax_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function num_files_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
@@ -638,13 +573,11 @@ end
 
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function start_file_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 function free_run_shots_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
@@ -656,10 +589,8 @@ if (isempty(input))
 end
 
 guidata(hObject, handles);
-
 % Hints: get(hObject,'String') returns contents of free_run_shots as text
 %        str2double(get(hObject,'String')) returns contents of free_run_shots as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function free_run_shots_CreateFcn(hObject, eventdata, handles)
@@ -668,20 +599,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 guidata(hObject, handles);
 
-
-
 function monitorrunbutton_ButtonDownFcn(hObject, eventdata, handles)
 
 guidata(hObject, handles);
-
-
-
-
-
-
-
-
-
 
 % --- Executes on button press in monitorrunbutton.
 function monitorrunbutton_Callback(hObject, eventdata, handles)
@@ -702,9 +622,6 @@ end
 pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
 % enableButtons(handles);
 guidata(hObject, handles);
-
-
-
 
 function  monitor_files(hObject,eventdata,handles)
 
@@ -737,8 +654,8 @@ mon_txy_flag = get(handles.mon_txy_check_box,'Value');
 %cut out those that dont match .txt
 %find new/modified
 %change path to match
-Low_Count_Size=0.7;
-wait_for_mod=6;
+Low_Count_Size=0.0;
+wait_for_mod=1;
 
 loop_num=1;
 pause on
@@ -919,17 +836,11 @@ while mon_continue
     mon_continue=get(handles.monitorrunbutton,'UserData');
 end
 
-
-
-
-
-
 % --- Executes on button press in stop_button.
 function stop_button_Callback(hObject, eventdata, handles)
 set(handles.monitorrunbutton,'UserData',0);
 set(handles.monitorrunbutton,'Enable','on');
 guidata(hObject, handles);
-
 
 % --- Executes on button press in mon_txy_check_box.
 function mon_txy_check_box_Callback(hObject, eventdata, handles)
@@ -954,7 +865,6 @@ function ymax_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 function plot_2d(hObject,handles)
 set(handles.plot_3d_button,'UserData',1)  %stop 3d rotate
@@ -1088,9 +998,7 @@ function timerCallback(src,event,handles)
        pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
    end
 return
-  
-
-
+ 
 function rot_angle_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
 
@@ -1107,7 +1015,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on selection change in num_hits_multi_files_h.
 function num_hits_multi_files_h_Callback(hObject, eventdata, handles)
 set(handles.num_hits_multi_files_h ,'String',hits_in_window_s);
@@ -1117,9 +1024,6 @@ function num_hits_multi_files_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-
 
 function TF_radius_guesss_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
@@ -1137,8 +1041,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function T_guess_input_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
 
@@ -1155,7 +1057,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in spatial_fit_checkbox.
 function spatial_fit_checkbox_Callback(hObject, eventdata, handles)
 checkboxStatus = get(handles.spatial_fit_checkbox,'Value');
@@ -1166,10 +1067,6 @@ else
 end
 % Update handles structure
 guidata(hObject, handles);
-
-
-
-
 
 % --- Executes on button press in FFT_checkbox.
 function FFT_checkbox_Callback(hObject, eventdata, handles)
@@ -1197,8 +1094,6 @@ currChar = get(handles.figure1,'CurrentCharacter');
    
 guidata(hObject, handles);
 
-
-
 %This will replot the TOF on an enter key pressed in the t_min window
 
 % --- Executes on key press with focus on t_window_max_h and none of its controls.
@@ -1223,8 +1118,6 @@ currChar = get(handles.figure1,'CurrentCharacter');
    end
 guidata(hObject, handles);
    
-
-
 % --- Executes during object creation, after setting all properties.
 function monitorrunbutton_CreateFcn(hObject, eventdata, handles)
 
@@ -1237,9 +1130,6 @@ currChar = get(handles.figure1,'CurrentCharacter');
        %call the pushbutton callback
    end
    guidata(hObject, handles);
-
-   
-   
 
 
 % --- Executes on key press with focus on start_file_h and none of its controls.
@@ -1309,6 +1199,19 @@ function velocity_h_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+function Hold_zoom_callback(hObject, eventdata,handles)
+    
+    hold_checkboxStatus = get(handles.zoom_checkbox,'Value');
+    if (hold_checkboxStatus)
+        handles.hold_Zoom = 1;
+    else
+        handles.hold_Zoom = 0;
+    end
+    % Update handles structure
+    guidata(hObject, handles);
+    
 
 
 % --- Executes on button press in plot_3d_button.
@@ -1458,7 +1361,6 @@ function oned_fit_checkbox_Callback(hObject, eventdata, handles)
 % hObject    handle to oned_fit_checkbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 % Hint: get(hObject,'Value') returns toggle state of oned_fit_checkbox
 
 
@@ -1467,8 +1369,6 @@ function fit_bimod_checkbox_Callback(hObject, eventdata, handles)
 % hObject    handle to fit_bimod_checkbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
 
 
 % --- Executes on key press with focus on t_min_2d_handle and none of its controls.
@@ -1489,3 +1389,13 @@ currChar = get(handles.figure1,'CurrentCharacter');
        %call the pushbutton callback
    end
 guidata(hObject, handles);
+
+
+% --- Executes on key press with focus on tof_button and none of its controls.
+function tof_button_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to tof_button (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)

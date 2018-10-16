@@ -15,6 +15,9 @@ function[xwidth_pix,ywidth_pix] = dld_2dplotter_window_a(handles,figure_number)
     %   The displayed figure has number figure_number, while zoom_input and
     %   bins_per_pixel control the zoom and resolution of the image. 
     
+%factor for compressing the dynamic range
+dyn_range_pow=0.45; %power between 0 and 1
+    
 tmin = str2double(get(handles.t_min_2d_handle,'String'));
 tmax = str2double(get(handles.t_max_2d_handle,'String'));
 ymin = str2double(get(handles.ymin_h,'String'))/1000;
@@ -36,10 +39,6 @@ if spatial_blur>bins/2
     spatial_blur=0;
     set(handles.spatial_blur,'String','0')
 end
-
-
-
-
 
 
 
@@ -67,15 +66,17 @@ if ~length(handles.txy_data_windowed)==0
         bin_area=((xmax-xmin)/bins)*((ymax-ymin)/bins);
         [counts,centers]=hist3(handles.txy_data_windowed(:,2:3),'edges',{XEdges,YEdges});
         counts=counts/bin_area;
-        if  ~spatial_blur==0
-            filter=fspecial('gaussian',round(10*spatial_blur),spatial_blur);
-            counts=imfilter(counts, filter, 'replicate');
-        end
+
         %imagesc seems to plot the wrong way round so we transpose here
+
         if Logscale_bool
-            counts=log10(counts);
+            counts=counts.^dyn_range_pow;
+        end
+        if  ~spatial_blur==0
+            counts=imgaussfilt(counts,spatial_blur);
         end
         imagesc(10^3*centers{1},10^3*centers{2},transpose(counts))
+        colormap(viridis())
         set(gca,'Ydir','normal')
         set(gcf,'Color',[1 1 1]);
         title('Spatial Dist. TOP')
@@ -93,13 +94,12 @@ if ~length(handles.txy_data_windowed)==0
         pane_counter=pane_counter+1;
         bin_area=((xmax-xmin)/bins)*((tmax-tmin)/bins);
         [counts,centers]=hist3(handles.txy_data_windowed(:,1:2),'edges',{TEdges,XEdges});
-        counts=counts/bin_area;
-        if  ~spatial_blur==0
-            filter=fspecial('gaussian',round(10*spatial_blur),spatial_blur);
-            counts=imfilter(counts, filter, 'replicate');
-        end
+        counts=counts/bin_area; 
         if Logscale_bool
-            counts=log10(counts);
+            counts=counts.^dyn_range_pow;
+        end
+        if  ~spatial_blur==0
+            counts=imgaussfilt(counts,spatial_blur);
         end
         %imagesc seems to plot the wrong way round so we transpose here
         imagesc(10^3*centers{2},centers{1},counts)
@@ -122,8 +122,8 @@ if ~length(handles.txy_data_windowed)==0
         [counts,centers]=hist3(handles.txy_data_windowed(:,[1,3]),'edges',{TEdges,YEdges});
         counts=counts/bin_area;
         if  ~spatial_blur==0
-            filter=fspecial('gaussian',round(10*spatial_blur),spatial_blur);
-            counts=imfilter(counts, filter, 'replicate');
+            filter=fspecial('gaussian',round(spatial_blur),spatial_blur);
+            counts = conv2(counts,filter,'same');
         end
         if Logscale_bool
             counts=log10(counts);
