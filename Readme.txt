@@ -1,8 +1,27 @@
-## DLD front panel
-### Matlab based GUI for He* BEC experiment raw data processing and visualisation
-######################
-Creator: Bryce Henson
-######################
+# Delay Line Detector Front Panel
+***Bryce Henson, Roman Khakimov, Rob Dall***   
+Matlab based GUI for He* BEC experiment basic data visualization and analysis
+
+
+| ![The Gui](/pics/gui.png "Fig1") | 
+|:--:| 
+ **Figure1**- The Gui  |
+ 
+ 
+
+## To Do
+- [x] Nice pictures
+- [ ] Document the features here
+- [ ] move functions from file exchange into folders
+
+
+## Contributions
+This project would not have been possible without the many open source tools that it is based on.
+* ***Ander Biguri*** [Perceptually uniform colormaps](https://au.mathworks.com/matlabcentral/fileexchange/51986-perceptually-uniform-colormaps)
+* ***Jan*** [FileTime](https://au.mathworks.com/matlabcentral/fileexchange/24671-filetime)
+* ***Daniel Eaton***    [sfigure](https://au.mathworks.com/matlabcentral/fileexchange/8919-smart-silent-figure)
+
+
 
 This is a upgraded version of the Classic dld_front_panel.
 -suports reading in TXY files
