@@ -18,9 +18,14 @@ Matlab based GUI for He* BEC experiment basic data visualization and analysis
  
 
 ## To Do
+- [ ] Unify import code from Tune out analysis
+- [ ] Fix different blur on YT 2d plot
+- [ ] fix error when try to import single empty file
+- [ ] unify code from auto convert to make the monitor run function more robust
+- [ ] silent figure option
 - [x] Nice pictures
 - [ ] Document the features here
-- [ ] move functions from file exchange into folders
+- [x] move functions from file exchange into folders
 
 
 ## Contributions
