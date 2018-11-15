@@ -16,7 +16,7 @@ function[xwidth_pix,ywidth_pix] = dld_2dplotter_window_a(handles,figure_number)
     %   bins_per_pixel control the zoom and resolution of the image. 
     
 %factor for compressing the dynamic range
-dyn_range_pow=0.45; %power between 0 and 1
+dyn_range_pow=0.1; %power between 0 and 1
     
 tmin = str2double(get(handles.t_min_2d_handle,'String'));
 tmax = str2double(get(handles.t_max_2d_handle,'String'));
@@ -84,7 +84,7 @@ if ~length(handles.txy_data_windowed)==0
         ylabel('Y(mm)')
         h=colorbar;
         if Logscale_bool
-        xlabel(h,'Log Count Density (m^{-2})')
+        xlabel(h,sprintf('Count Density^{%.2f} (m^{-2})',dyn_range_pow))
         else
         xlabel(h,'Count Density (m^{-2})')
         end
@@ -109,11 +109,11 @@ if ~length(handles.txy_data_windowed)==0
         xlabel('X(mm)')
         ylabel('T(s)')
         h=colorbar;
-         if Logscale_bool
-        xlabel(h,'Log Count Density (m^{-1}s^{-1})')
+        if Logscale_bool
+            xlabel(h,sprintf('Count Density^{%.2f} (m^{-1}s^{-1})',dyn_range_pow))
         else
-        xlabel(h,'Count Density (m^{-1}s^{-1})')
-         end
+            xlabel(h,'Count Density (m^{-1}s^{-1})')
+        end
     end
     if YT_bool
         subplot(1,panes,pane_counter);
@@ -121,12 +121,11 @@ if ~length(handles.txy_data_windowed)==0
         bin_area=((ymax-ymin)/bins)*((tmax-tmin)/bins);
         [counts,centers]=hist3(handles.txy_data_windowed(:,[1,3]),'edges',{TEdges,YEdges});
         counts=counts/bin_area;
-        if  ~spatial_blur==0
-            filter=fspecial('gaussian',round(spatial_blur),spatial_blur);
-            counts = conv2(counts,filter,'same');
-        end
         if Logscale_bool
-            counts=log10(counts);
+            counts=counts.^dyn_range_pow;
+        end
+        if  ~spatial_blur==0
+            counts=imgaussfilt(counts,spatial_blur);
         end
         %imagesc seems to plot the wrong way round so we transpose here
         imagesc(10^3*centers{2},centers{1},counts)
@@ -136,11 +135,11 @@ if ~length(handles.txy_data_windowed)==0
         xlabel('Y(mm)')
         ylabel('T(s)')
         h=colorbar;
-         if Logscale_bool
-        xlabel(h,'Log Count Density (m^{-1}s^{-1})')
+        if Logscale_bool
+            xlabel(h,sprintf('Count Density^{%.2f} (m^{-1}s^{-1})',dyn_range_pow))
         else
-        xlabel(h,'Count Density (m^{-1}s^{-1})')
-         end
+            xlabel(h,'Count Density (m^{-1}s^{-1})')
+        end
     end
 
      %colormap(hot);
