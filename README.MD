@@ -1,5 +1,5 @@
 # Delay Line Detector Front Panel
-***Bryce Henson, Roman Khakimov, Rob Dall***   
+***Bryce Henson, [Jacob A. Ross](https://github.com/GroundhogState),Roman Khakimov, Rob Dall***   
 Matlab based GUI for He* BEC experiment basic data visualization and analysis
 
 
