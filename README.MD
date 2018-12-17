@@ -3,6 +3,20 @@
 Matlab based GUI for He* BEC experiment basic data visualization and analysis
 
 
+
+
+## Install
+``` 
+git clone --recurse-submodules -j8 https://github.com/brycehenson/DLD_front_panel.git
+```
+then to update 
+```
+git submodule update --recursive --init
+git submodule foreach --recursive git pull origin master
+```
+
+
+
 | ![The Gui](/pics/gui.png "Fig1") | 
 |:--:| 
  **Figure1**- The Gui  |
