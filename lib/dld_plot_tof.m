@@ -1,4 +1,5 @@
-function dld_plot_tof(hObject,handles) %integrated to 1d plots
+function dld_plot_tof(hObject,handles) 
+%integrated to 1d plots
 %this function handles ploting the 1d information
 %it should be upgraded to do bimodal fits and then use 2.58, 7.144 from pethick
 %to calc T/Tc
@@ -130,25 +131,12 @@ if get(handles.FFT_checkbox,'Value')
         dispcount=dispcount+width;
         L=length(T1d_counts);
         Fs=1/T_bin_width;
-        if use_window
-            fftdat = fft(hamming(L)'.*T1d_counts);    
-        else
-            fftdat = fft(T1d_counts);   
-        end
-        P = abs(fftdat/L);
-        P(2:end-1) = 2*P(2:end-1); 
-        f = (0:L-1)*Fs/L;
-        % if mod(size(x,1),2)==0
-        %      error('odd Len')
-        % end
-        if mod(L,2)~=0 %odd
-            f = f(1:(L+1)/2);
-            P=P(1:(L+1)/2);
-        else %even
-            f = f(1:L/2);  % sample fs/2
-            P=P(1:L/2);
-        end
-        
+
+        pad_len = T_bin_num;
+        fft_out = fft_tx(t_centers,T1d_counts,'padding',pad_len,'window','hamming');
+        f = fft_out(1,:);
+        amp=fft_out(2,:);
+        P = abs(amp);
         f=f(start_clip:end); %remove part of the DC spike
         P=P(start_clip:end);
         if get(handles.FFT_log_checkbox,'Value')
@@ -420,7 +408,7 @@ if ~quiet
 
     T=(abs(fit_params(3,1)))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
 
-    str=sprintf('GaussFit Width %0.2e±%0.1e%s \nTemp.(no interactions)%0.2ek',abs(fit_params(3,1)),fit_params(3,2),units,T);
+    str=sprintf('GaussFit Width %0.2eï¿½%0.1e%s \nTemp.(no interactions)%0.2ek',abs(fit_params(3,1)),fit_params(3,2),units,T);
     text(0.02,0.9,str,'Units','normalized'); 
 end
 end
@@ -526,7 +514,7 @@ omegabar=(2*pi*2*pi*2*pi*handles.trapfreqrad*handles.trapfreqrad*handles.trapfre
 %handles.boltzconst*Tc=0.94*handles.hbar*omegabar*N^1/3
 Nest=(handles.boltzconst*Tc/(0.94*handles.hbar*omegabar))^3
 
-str=sprintf('GaussFit Radius %0.2e±%0.1e%s \nTemp.(no interactions)%0.2ek\nTF radius %0.2e±%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\n Tc %0.2ek\n Est. N %0.2e',...
+str=sprintf('GaussFit Radius %0.2eï¿½%0.1e%s \nTemp.(no interactions)%0.2ek\nTF radius %0.2eï¿½%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\n Tc %0.2ek\n Est. N %0.2e',...
     abs(fit_params(3,1)),fit_params(3,2),units,T,abs(fit_params(5,1)),abs(fit_params(5,2)),units,Ncondfrac*100,TonTc*100,Tc,Nest);
 text(0.02,0.9,str,'Units','normalized','VerticalAlignment','top'); 
 

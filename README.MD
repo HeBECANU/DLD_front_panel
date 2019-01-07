@@ -1,6 +1,20 @@
 # Delay Line Detector Front Panel
-***Bryce Henson, Roman Khakimov, Rob Dall***   
+***Bryce Henson, [Jacob A. Ross](https://github.com/GroundhogState),Roman Khakimov, Rob Dall***   
 Matlab based GUI for He* BEC experiment basic data visualization and analysis
+
+
+
+
+## Install
+``` 
+git clone --recurse-submodules -j8 https://github.com/brycehenson/DLD_front_panel.git
+```
+then to update 
+```
+git submodule update --recursive --init
+git submodule foreach --recursive git pull origin master
+```
+
 
 
 | ![The Gui](/pics/gui.png "Fig1") | 
