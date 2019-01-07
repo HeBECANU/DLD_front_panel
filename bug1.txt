@@ -1,0 +1,18 @@
+import halted
+zero counts encountered
+Index in position 2 exceeds array bounds.
+Error in dld_front_panel>windowdata (line 1169)
+mask=handles.txy_data(:,1)>t_window_min & handles.txy_data(:,1)<t_window_max...
+Error in dld_front_panel>tof_button_Callback (line 362)
+windowdata(hObject,handles,1)
+Error in dld_front_panel>importdata (line 322)
+    tof_button_Callback(hObject, eventdata, guidata(hObject))
+Error in dld_front_panel>pushbutton1_Callback (line 183)
+    importdata(hObject,eventdata,handles)
+Error in gui_mainfcn (line 95)
+        feval(varargin{:});
+Error in dld_front_panel (line 91)
+    gui_mainfcn(gui_State, varargin{:});
+Error in
+matlab.graphics.internal.figfile.FigFile/read>@(hObject,eventdata)dld_front_panel('pushbutton1_Callback',hObject,eventdata,guidata(hObject)) 
+Error while evaluating UIControl Callback.
