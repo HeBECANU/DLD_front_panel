@@ -11,8 +11,7 @@ git clone --recurse-submodules -j8 https://github.com/brycehenson/DLD_front_pane
 ```
 then to update 
 ```
-git submodule update --recursive --init
-git submodule foreach --recursive git pull origin master
+git submodule update --remote --merge
 ```
 
 
