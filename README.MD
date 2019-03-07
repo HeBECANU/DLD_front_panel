@@ -32,8 +32,9 @@ git submodule foreach --recursive git pull origin master
  
 
 ## To Do
-- [ ] Unify import code from Tune out analysis
+- [ ] Unify import code from Simple_BEC_Analysis analysis
 - [x] Fix different blur on YT 2d plot
+- [x] Padd FFT
 - [ ] fix error when try to import single empty file
 - [ ] unify code from auto convert to make the monitor run function more robust
 - [ ] silent figure option
