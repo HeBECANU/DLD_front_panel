@@ -129,20 +129,11 @@ if get(handles.FFT_checkbox,'Value')
         f_window = fft_ax.XLim;
         h_window = fft_ax.YLim;
         dispcount=dispcount+width;
-        L=length(T1d_counts);
-        Fs=1/T_bin_width;
-
-        pad_len = T_bin_num;
-        fft_out = fft_tx(t_centers,T1d_counts,'padding',pad_len,'window','hamming');
-        f = fft_out(1,:);
-        amp=fft_out(2,:);
-        P = abs(amp);
-        f=f(start_clip:end); %remove part of the DC spike
-        P=P(start_clip:end);
+        fft_out = fft_tx(t_centers,T1d_counts,'padding',10,'window','hamming');
+        fft_out=fft_out(:,start_clip:end);%remove part of the DC spike
+        plot_time_fft=plot(fft_out(1,:),abs(fft_out(2,:)),'k');
         if get(handles.FFT_log_checkbox,'Value')
-            semilogy(f,P,'k')
-        else
-            plot(f,P,'k')
+            set(gca,'yscale','log')
         end
 
         if get(handles.zoom_checkbox, 'Value')
@@ -408,7 +399,7 @@ if ~quiet
 
     T=(abs(fit_params(3,1)))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
 
-    str=sprintf('GaussFit Width %0.2eï¿½%0.1e%s \nTemp.(no interactions)%0.2ek',abs(fit_params(3,1)),fit_params(3,2),units,T);
+    str=sprintf('GaussFit Width %0.2±%0.1e%s \nTemp.(no interactions)%0.2ek',abs(fit_params(3,1)),fit_params(3,2),units,T);
     text(0.02,0.9,str,'Units','normalized'); 
 end
 end
@@ -514,7 +505,7 @@ omegabar=(2*pi*2*pi*2*pi*handles.trapfreqrad*handles.trapfreqrad*handles.trapfre
 %handles.boltzconst*Tc=0.94*handles.hbar*omegabar*N^1/3
 Nest=(handles.boltzconst*Tc/(0.94*handles.hbar*omegabar))^3
 
-str=sprintf('GaussFit Radius %0.2eï¿½%0.1e%s \nTemp.(no interactions)%0.2ek\nTF radius %0.2eï¿½%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\n Tc %0.2ek\n Est. N %0.2e',...
+str=sprintf('GaussFit Radius %0.2±%0.1e%s \nTemp.(no interactions)%0.2ek\nTF radius %0.2±%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\n Tc %0.2ek\n Est. N %0.2e',...
     abs(fit_params(3,1)),fit_params(3,2),units,T,abs(fit_params(5,1)),abs(fit_params(5,2)),units,Ncondfrac*100,TonTc*100,Tc,Nest);
 text(0.02,0.9,str,'Units','normalized','VerticalAlignment','top'); 
 
