@@ -349,10 +349,9 @@ amp_guess=max(ydata);
 a=xlim; %cant seem to do [a,b]=xlim
 xmin=a(1);
 xmax=a(2);
-mu_guess=sum(xdata.*ydata)/sum(ydata); %compute the weighted mean
+mu_guess=wmean(xdata,ydata); %compute the weighted mean
 %mu_guess=(xmin+xmax)/2;
-sig_guess=sum((xdata-mu_guess).^2.*ydata)/sum(ydata); %compute the mean square weighted deviation
-%sig_guess=(xmax-xmin)/1; %seems better to overestimate the width by a lot
+sig_guess=sqrt(sum((xdata-mu_guess).^2.*ydata)/sum(ydata)); %compute the mean square weighted deviation
 fo = statset('TolFun',10^-6,...
     'TolX',10^-10,...
     'MaxIter',10^10,...
@@ -362,12 +361,12 @@ fitobject=fitnlm(xdata,ydata,...
     'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))',...
    [amp_guess,mu_guess,sig_guess],...
     'CoefficientNames',{'amp','mu','sig'},'Options',fo);
-xvalues=linspace(min(xdata),max(xdata),300);
+x_sample_fit=linspace(min(xdata),max(xdata),300);
 fit_params=[fitobject.Coefficients.Estimate,fitobject.Coefficients.SE];
 
 if ~quiet
     hold on
-    plot(xvalues,feval(fitobject,xvalues),'r')
+    plot(x_sample_fit,feval(fitobject,x_sample_fit),'r')
     %legend('data','fit')
     hold off
     %other fit params
@@ -388,19 +387,23 @@ if ~quiet
 
     if istime
         vdet=handles.grav*handles.falltime;
-        units='s';
+        width_units='s';
     else
         vdet=1/1000; %to cancel the plot being in mm
-        units='mm';
+        width_units='mm';
     end
     
     fit_params(3,1)=fit_params(3,1)*vdet;
     fit_params(3,2)=fit_params(3,2)*vdet;
 
-    T=(abs(fit_params(3,1)))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
-
-    str=sprintf('GaussFit Width %0.2±%0.1e%s \nTemp.(no interactions)%0.2ek',abs(fit_params(3,1)),fit_params(3,2),units,T);
-    text(0.02,0.9,str,'Units','normalized'); 
+    temperature_val=(abs(fit_params(3,1)))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
+    temperature_unc=temperature_val*2*fit_params(3,2)/abs(fit_params(3,1));
+    temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'b');
+    width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'b');
+    cen_str=string_value_with_unc(abs(fit_params(2,1)),fit_params(2,2),'b');
+    str=sprintf('Gauss fit \n   Cen %s %s \n   Width %s %s \nTemp.(no interactions)%s uk',...
+        cen_str,width_units,width_str,width_units,temperature_str);
+    text(0.01,0.9,str,'Units','normalized'); 
 end
 end
 
