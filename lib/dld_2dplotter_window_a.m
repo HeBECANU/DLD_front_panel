@@ -1,4 +1,4 @@
-function[xwidth_pix,ywidth_pix] = dld_2dplotter_window_a(handles,figure_number)
+function[xwidth_pix,ywidth_pix] = dld_2dplotter_window_a(handles)
 
     %%%%%%%%%% 2d_data_plotter_window %%%%%%%%%%
     %   Takes a handle object with
@@ -41,8 +41,7 @@ if spatial_blur>bins/2
 end
 
 
-
-plot2d_hist_gauss=0; %in future will implement smoothing in front pannel
+fig = stfig('DLD Front Panel: 2d count rate pofiles');
 
 if mod(bins,2) == 0 %if the number of bins are even make them odd
     bins=bins+1;
@@ -57,7 +56,7 @@ if ~length(handles.txy_data_windowed)==0
     panes=sum([XY_bool,XT_bool,YT_bool]);
     pane_counter=1;
 
-    sfigure(figure_number);
+    stfig(fig);
     set(gcf,'Units','normal')
     set(gca,'Position',[0 0 1 1])
     if XY_bool

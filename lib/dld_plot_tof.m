@@ -8,13 +8,13 @@ function dld_plot_tof(hObject,handles)
 num_files = handles.files_imported;
 t_window_min=str2double(get(handles.t_window_min_h,'String'));
 t_window_max=str2double(get(handles.t_window_max_h,'String'));
-T_bin_width=str2double(get(handles.time_binsize,'String'));
+T_bin_width=str2double(get(handles.time_binsize,'String'))*1e-3;
 
-ymin = str2double(get(handles.ymin_h,'String'))/1000;
-ymax = str2double(get(handles.ymax_h,'String'))/1000;
-xmin = str2double(get(handles.xmin_h,'String'))/1000;
-xmax = str2double(get(handles.xmax_h,'String'))/1000;
-xybins = str2double(get(handles.oned_spatial_bins_h,'String'));
+ymin = str2double(get(handles.ymin_h,'String'))*1e-3;
+ymax = str2double(get(handles.ymax_h,'String'))*1e-3;
+xmin = str2double(get(handles.xmin_h,'String'))*1e-3;
+xmax = str2double(get(handles.xmax_h,'String'))*1e-3;
+xybinw = str2double(get(handles.oned_spatial_binw_h,'String'))*1e-3;
 
 totdisplays=get(handles.oned_time_checkbox,'Value')+...
     get(handles.oned_X_checkbox,'Value')+get(handles.oned_Y_checkbox,'Value');
@@ -24,36 +24,26 @@ if get(handles.FFT_checkbox,'Value')
 else
     width=1;
 end
-sfigure(150);
-fig = gcf;
+
+fig = stfig('DLD Front Panel: 1d count rate pofiles');
 
 
 
 if get(handles.oned_time_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
-    %specify the bin edges
-    T_bin_num=round((t_window_max-t_window_min)/T_bin_width);
-    T_bin_num=2*floor( T_bin_num/2)+1; %round to an odd number
-    T_bin_width=(t_window_max-t_window_min)/T_bin_num; %change the value to the rounded one
-    %set(handles.status_handle ,'String',['No Counts in 2d Window']);
-    %set(handles.time_binsize,'String',num2str(T_bin_width)); %upate the
-    %used odd bins time window
-    %change the max time so that whole bins can fit
-    T_bin=linspace(t_window_min,t_window_min+T_bin_width*T_bin_num,T_bin_num);
-    [T1d_counts,edges]=histcounts(handles.txy_data_windowed(:,1),T_bin);
-    t_centers=mean([edges(1:end-1);edges(2:end)]);
-    T1d_counts=1e-3*T1d_counts/(T_bin_width*num_files);
-    plot(t_centers,T1d_counts,'k')
+    shist_out=smooth_hist(handles.txy_data_windowed(:,1),'lims',[t_window_min,t_window_max],'sigma',T_bin_width);
+
+    plot(shist_out.bin.centers,shist_out.count_rate.smooth*1e-3,'k')
     xlabel('t, time(s)');
     ylabel('Count Rate(kHz/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(1,:,:)=fit_cond(hObject,handles,t_centers,T1d_counts,1);
+            bmparam(1,:,:)=fit_cond(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1);
         else  
-            fit_therm(hObject,handles,t_centers,T1d_counts,1,0);
+            fit_therm(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1,0);
         end
     end
 
@@ -62,22 +52,18 @@ end
 if get(handles.oned_X_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
-    %specify the bin edges
-    X_bin=linspace(xmin,xmax,xybins);
-    X_bin_width=(xmax-xmin)/xybins;
-    [X1d_counts,X1d_edges]=histcounts(handles.txy_data_windowed(:,2),X_bin);
-    X1d_centers=mean([X1d_edges(1:end-1);X1d_edges(2:end)]);
-    X1d_counts=1e-3*X1d_counts/(X_bin_width*num_files);
-    plot(X1d_centers*1000,X1d_counts,'k')
+    shist_out=smooth_hist(handles.txy_data_windowed(:,2),'lims',[xmin,xmax],'sigma',xybinw);
+    shist_out.bin.centers=shist_out.bin.centers*1e3; 
+    plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
     xlabel('x(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(2,:,:)=fit_cond(hObject,handles,X1d_centers*1000,X1d_counts/X_bin_width,0);
+            bmparam(2,:,:)=fit_cond(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0);
         else
-            fit_therm(hObject,handles,X1d_centers*1000,X1d_counts/X_bin_width,0,0);
+            fit_therm(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0,0);
         end
     end
     
@@ -86,22 +72,19 @@ end
 if get(handles.oned_Y_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
-    %specify the bin edges
-    Y_bin=linspace(ymin,ymax,xybins);
-    Y_bin_width=(ymax-ymin)/xybins;
-    [Y1d_counts,Y1d_edges]=histcounts(handles.txy_data_windowed(:,3),Y_bin);
-    Y1d_centers=mean([Y1d_edges(1:end-1);Y1d_edges(2:end)]);
-    Y1d_counts=1e-3*Y1d_counts/(Y_bin_width*num_files);
-    plot(Y1d_centers*1000,Y1d_counts/Y_bin_width,'k')
+    
+    shist_out=smooth_hist(handles.txy_data_windowed(:,3),'lims',[ymin,ymax],'sigma',xybinw);
+    shist_out.bin.centers=shist_out.bin.centers*1e3; 
+    plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
     xlabel('y(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(3,:,:)=fit_cond(hObject,handles,Y1d_centers*1000,Y1d_counts/Y_bin_width,0);
+            bmparam(3,:,:)=fit_cond(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0);
         else
-            fit_therm(hObject,handles,Y1d_centers*1000,Y1d_counts/Y_bin_width,0,0);
+            fit_therm(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0,0);
         end
     end
 end
@@ -342,6 +325,8 @@ function fit_params=fit_therm(hObject,handles,xdata,ydata,istime,quiet)
 %idealy this would be done with a constrained fit but ticky to implement in
 %matlab
 
+global const
+
 %dim = [0.2 0.6 0.3 0.3];
 %str = {'Straight Line Plot','from 1 to 10'};
 %annotation('textbox',dim,'String',str,'FitBoxToText','on','LineStyle','none');
@@ -382,8 +367,25 @@ if ~quiet
     %for the time axis we must convert to spatail using velocity
     %xwidth=twidth*velocity=vwidth*1/2 g t^2
     %total expression then T=(twidth^2*velocity^2)/(k*tfall^2*tfall^2)
+
+    
+    %to convert this to temp we use the expression 2.41 from pethick
+    %pwidth=(mkT)^{1/2}
+    %vwidth=sqrt(kb T/ m )
+    %T=vwidth^2 m/(kb)
+    %for the time axis we must convert to spatial width using velocity
+    %xwidth=twidth*velocity
+    %then
+    % v_width=x_width/time_fall
+    %T=vwidth^2 m/(kb)
+    %T=(x_width/time_fall)^2 m/(kb)
+    %T=(twidth*velocity/time_fall)^2 m/(kb)
+    
+    %total expression then (twidth*velocity/time_fall)^2 * m/kb
+    
     %handles.falldist = .848; %fall distance of 848mm
     %handles.falltime = .416; %fall time of 416ms
+
 
     if istime
         vdet=handles.grav*handles.falltime;
@@ -396,7 +398,7 @@ if ~quiet
     fit_params(3,1)=fit_params(3,1)*vdet;
     fit_params(3,2)=fit_params(3,2)*vdet;
 
-    temperature_val=(abs(fit_params(3,1)))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
+    temperature_val=(abs(fit_params(3,1))/handles.falltime)^2 *handles.masshe/const.kb;
     temperature_unc=temperature_val*2*fit_params(3,2)/abs(fit_params(3,1));
     temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'b');
     width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'b');

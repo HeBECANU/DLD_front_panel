@@ -99,6 +99,8 @@ function dld_front_panel_OpeningFcn(hObject, eventdata, handles, varargin)
 %These are some tweaks for the program that are a bit to complex for the
 %gui
 
+hebec_constants 
+
 handles.files_imported=0;
 handles.falldist = .848; %fall distance of 848mm
 handles.falltime = .416; %fall time of 416ms
@@ -108,7 +110,6 @@ handles.grav=9.7961; %from https://d28rz98at9flks.cloudfront.net/12293/Rec1969_0
 handles.boltzconst=1.38064852*10^-23; %J/K
 handles.hbar=1.0545718*10^(-34);
 handles.masshe=6.6464*10^-27; %mass in kg
-
 
 handles.auto_press_TOF=1;   %runs the Plot TOF button when read data is done
 handles.auto_press_2d=1;    %same but for 2d plot 
@@ -356,7 +357,7 @@ if handles.num_hits <10
 end
 
 set(handles.plot_3d_button,'UserData',1)  %stop 3d rotate
-set(handles.status_handle ,'String','Plotting TOF');
+set(handles.status_handle ,'String','Plotting 1D profiles');
 pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
 
 windowdata(hObject,handles,1)
@@ -874,7 +875,7 @@ end
 
 function plot_2d(hObject,handles)
 set(handles.plot_3d_button,'UserData',1)  %stop 3d rotate
-set(handles.status_handle ,'String','Plotting TOF');
+set(handles.status_handle ,'String','Plotting 2D profiles');
 
 
 pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
@@ -884,7 +885,7 @@ set(handles.num_hits_2d_h ,'String',int2str(size(handles.txy_data_windowed,1)));
 
 pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
 %[xwidth_pix,ywidth_pix] =
-dld_2dplotter_window_a(handles,250);
+dld_2dplotter_window_a(handles);
 
 pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
 %pixel_size_x = bins_per_pix*.013158;
@@ -892,7 +893,6 @@ pause(1e-5)%this updates without stealing focus but allows button press unlike d
 %set(handles.pixel_size_x_h ,'String',pixel_size_x_s);
 
 if handles.spatial_fit == 1
-    
     xwidth = num2str(xwidth_pix*pixel_size_x);
     ywidth = num2str(ywidth_pix*pixel_size_x);
     
