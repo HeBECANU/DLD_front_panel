@@ -16,7 +16,7 @@ function[xwidth_pix,ywidth_pix] = dld_2dplotter_window_a(handles)
     %   bins_per_pixel control the zoom and resolution of the image. 
     
 %factor for compressing the dynamic range
-dyn_range_pow=0.1; %power between 0 and 1
+dyn_range_pow=0.5; %power between 0 and 1
     
 tmin = str2double(get(handles.t_min_2d_handle,'String'));
 tmax = str2double(get(handles.t_max_2d_handle,'String'));
