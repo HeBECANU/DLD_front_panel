@@ -33,8 +33,8 @@ if get(handles.oned_time_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
     shist_out=smooth_hist(handles.txy_data_windowed(:,1),'lims',[t_window_min,t_window_max],'sigma',T_bin_width);
-
-    plot(shist_out.bin.centers,shist_out.count_rate.smooth*1e-3,'k')
+    shist_out.count_rate.smooth=shist_out.count_rate.smooth*1e-3/num_files;
+    plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
     xlabel('t, time(s)');
     ylabel('Count Rate(kHz/File)');
     set(gcf,'Color',[1 1 1]);
@@ -53,7 +53,7 @@ if get(handles.oned_X_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
     shist_out=smooth_hist(handles.txy_data_windowed(:,2),'lims',[xmin,xmax],'sigma',xybinw);
-    shist_out.bin.centers=shist_out.bin.centers*1e3; 
+    shist_out.bin.centers=shist_out.bin.centers*1e-3; 
     plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
     xlabel('x(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
@@ -74,7 +74,7 @@ if get(handles.oned_Y_checkbox,'Value')
     dispcount=dispcount+width;
     
     shist_out=smooth_hist(handles.txy_data_windowed(:,3),'lims',[ymin,ymax],'sigma',xybinw);
-    shist_out.bin.centers=shist_out.bin.centers*1e3; 
+    shist_out.bin.centers=shist_out.bin.centers*1e-3; 
     plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
     xlabel('y(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
@@ -338,20 +338,22 @@ mu_guess=wmean(xdata,ydata); %compute the weighted mean
 %mu_guess=(xmin+xmax)/2;
 sig_guess=sqrt(sum((xdata-mu_guess).^2.*ydata)/sum(ydata)); %compute the mean square weighted deviation
 fo = statset('TolFun',10^-6,...
-    'TolX',10^-10,...
-    'MaxIter',10^10,...
+    'TolX',1e-10,...
+    'MaxIter',1e4,...
     'UseParallel',1);
 % 'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))+off',...
 fitobject=fitnlm(xdata,ydata,...
     'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))',...
    [amp_guess,mu_guess,sig_guess],...
     'CoefficientNames',{'amp','mu','sig'},'Options',fo);
-x_sample_fit=linspace(min(xdata),max(xdata),300);
+x_sample_fit=col_vec(linspace(min(xdata),max(xdata),1e3));
 fit_params=[fitobject.Coefficients.Estimate,fitobject.Coefficients.SE];
 
 if ~quiet
+    [ysamp_val,ysamp_ci]=predict(fitobject,x_sample_fit);
     hold on
-    plot(x_sample_fit,feval(fitobject,x_sample_fit),'r')
+    plot(x_sample_fit,ysamp_ci,'color',[1,1,1].*0.5)
+    plot(x_sample_fit,ysamp_val,'r')
     %legend('data','fit')
     hold off
     %other fit params
