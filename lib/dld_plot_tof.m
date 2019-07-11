@@ -257,7 +257,7 @@ if ~quiet
     else
         xscaling=1e-3;
     end
-    [ysamp_val,ysamp_ci]=predict(fitobject,x_sample_fit);
+    [ysamp_val,ysamp_ci]=predict(fitobject,x_sample_fit,'Alpha',1-erf(1/sqrt(2)));
     hold on
     plot(xscaling*x_sample_fit,ysamp_ci,'color',[1,1,1].*0.5)
     plot(xscaling*x_sample_fit,ysamp_val,'r')
