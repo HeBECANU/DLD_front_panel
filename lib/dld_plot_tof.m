@@ -309,9 +309,9 @@ if ~quiet
 
     temperature_val=(abs(fit_params(3,1))/handles.falltime)^2 *const.mhe/const.kb;
     temperature_unc=temperature_val*2*fit_params(3,2)/abs(fit_params(3,1));
-    temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'b');
-    width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'b');
-    cen_str=string_value_with_unc(abs(fit_params(2,1)),fit_params(2,2),'b');
+    temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'type','b','separator',0);
+    width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'type','b','separator',0);
+    cen_str=string_value_with_unc(abs(fit_params(2,1)),fit_params(2,2),'type','b','separator',0);
     str=sprintf('Gauss fit \n   Cen %s %s \n   Width %s %s \nTemp.(no interactions)%s uk',...
         cen_str,width_units,width_str,width_units,temperature_str);
     text(0.01,0.9,str,'Units','normalized'); 

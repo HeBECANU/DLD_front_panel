@@ -27,7 +27,7 @@ xmax =  str2double(get(handles.xmax_h,'String'))/1000;
 XY_bool=get(handles.XY_checkbox,'Value');
 XT_bool=get(handles.XT_checkbox,'Value');
 YT_bool=get(handles.YT_checkbox,'Value');
-Logscale_bool=get(handles.LogScale2d_checkbox,'Value');
+range_comp_bool=get(handles.LogScale2d_checkbox,'Value');
 spatial_blur=str2double(get(handles.spatial_blur,'String'));
 fit_flag=handles.spatial_fit;
 bins=str2double(get(handles.spatial_bins_h,'String'));
@@ -40,6 +40,11 @@ if spatial_blur>bins/2
     set(handles.spatial_blur,'String','0')
 end
 
+%set up the colormap
+cmap=viridis();
+if range_comp_bool
+    cmap=nonlinear_colormap(cmap,'power',[dyn_range_pow]);
+end
 
 fig = stfig('DLD Front Panel: 2d count rate pofiles');
 
@@ -65,28 +70,19 @@ if ~length(handles.txy_data_windowed)==0
         bin_area=((xmax-xmin)/bins)*((ymax-ymin)/bins);
         [counts,centers]=hist3(handles.txy_data_windowed(:,2:3),'edges',{XEdges,YEdges});
         counts=counts/bin_area;
-
-        %imagesc seems to plot the wrong way round so we transpose here
-
-        if Logscale_bool
-            counts=counts.^dyn_range_pow;
-        end
         if  ~spatial_blur==0
             counts=imgaussfilt(counts,spatial_blur);
         end
         imagesc(10^3*centers{1},10^3*centers{2},transpose(counts))
-        colormap(viridis())
+        colormap(gca,cmap)
         set(gca,'Ydir','normal')
         set(gcf,'Color',[1 1 1]);
         title('Spatial Dist. TOP')
         xlabel('X(mm)')
         ylabel('Y(mm)')
         h=colorbar;
-        if Logscale_bool
-        xlabel(h,sprintf('Count Density^{%.2f} (m^{-2})',dyn_range_pow))
-        else
         xlabel(h,'Count Density (m^{-2})')
-        end
+
     end
     if XT_bool
         subplot(1,panes,pane_counter);
@@ -94,21 +90,18 @@ if ~length(handles.txy_data_windowed)==0
         bin_area=((xmax-xmin)/bins)*((tmax-tmin)/bins);
         [counts,centers]=hist3(handles.txy_data_windowed(:,1:2),'edges',{TEdges,XEdges});
         counts=counts/bin_area; 
-        if Logscale_bool
-            counts=counts.^dyn_range_pow;
-        end
         if  ~spatial_blur==0
             counts=imgaussfilt(counts,spatial_blur);
         end
-        %imagesc seems to plot the wrong way round so we transpose here
         imagesc(10^3*centers{2},centers{1},counts)
+        colormap(gca,cmap)
         set(gca,'Ydir','normal')
         set(gcf,'Color',[1 1 1]);
         title('Spatial Dist. XT')
         xlabel('X(mm)')
         ylabel('T(s)')
         h=colorbar;
-        if Logscale_bool
+        if range_comp_bool
             xlabel(h,sprintf('Count Density^{%.2f} (m^{-1}s^{-1})',dyn_range_pow))
         else
             xlabel(h,'Count Density (m^{-1}s^{-1})')
@@ -120,21 +113,18 @@ if ~length(handles.txy_data_windowed)==0
         bin_area=((ymax-ymin)/bins)*((tmax-tmin)/bins);
         [counts,centers]=hist3(handles.txy_data_windowed(:,[1,3]),'edges',{TEdges,YEdges});
         counts=counts/bin_area;
-        if Logscale_bool
-            counts=counts.^dyn_range_pow;
-        end
         if  ~spatial_blur==0
             counts=imgaussfilt(counts,spatial_blur);
         end
-        %imagesc seems to plot the wrong way round so we transpose here
         imagesc(10^3*centers{2},centers{1},counts)
+        colormap(gca,cmap)
         set(gca,'Ydir','normal')
         set(gcf,'Color',[1 1 1]);
         title('Spatial Dist. YT')
         xlabel('Y(mm)')
         ylabel('T(s)')
         h=colorbar;
-        if Logscale_bool
+        if range_comp_bool
             xlabel(h,sprintf('Count Density^{%.2f} (m^{-1}s^{-1})',dyn_range_pow))
         else
             xlabel(h,'Count Density (m^{-1}s^{-1})')
