@@ -412,6 +412,7 @@ Ncondfrac=countsTF/(countsTF+countsGauss);
 TonTc=(1-Ncondfrac)^(1/3);
 
 T=(abs(fit_params(5,1)/vdet))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
+dT=(abs(fit_params(5,2)/vdet))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
 
 %should use 2.90 from pethick to correct for our cigar trap
 Tc=T/TonTc;
@@ -423,8 +424,9 @@ omegabar=(2*pi*2*pi*2*pi*handles.trapfreqrad*handles.trapfreqrad*handles.trapfre
 %handles.boltzconst*Tc=0.94*handles.hbar*omegabar*N^1/3
 Nest=(handles.boltzconst*Tc/(0.94*handles.hbar*omegabar))^3;
 
-str=sprintf('GaussFit Radius %0.2e±%0.1e%s \nTemp.(no interactions)%0.2ek\nTF radius %0.2e±%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\nTc %0.2ek\nEst. N %0.2e',...
-    abs(fit_params(3,1)),fit_params(3,2),units,T,abs(fit_params(5,1)),abs(fit_params(5,2)),units,Ncondfrac*100,TonTc*100,Tc,Nest);
+str=sprintf('GaussFit Radius %s %s \nTemp.(no interactions)%s K\nTF radius %0.2e±%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\nTc %0.2ek\nEst. N %0.2e',...
+    string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2)),units,...
+    string_value_with_unc(T,dT),abs(fit_params(5,1)),abs(fit_params(5,2)),units,Ncondfrac*100,TonTc*100,Tc,Nest);
 text(0.02,0.9,str,'Units','normalized','VerticalAlignment','top','FontSize',14); 
 
 end
