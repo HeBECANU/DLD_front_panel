@@ -101,11 +101,7 @@ if ~length(handles.txy_data_windowed)==0
         xlabel('X(mm)')
         ylabel('T(s)')
         h=colorbar;
-        if range_comp_bool
-            xlabel(h,sprintf('Count Density^{%.2f} (m^{-1}s^{-1})',dyn_range_pow))
-        else
-            xlabel(h,'Count Density (m^{-1}s^{-1})')
-        end
+        xlabel(h,'Count Density (m^{-1}s^{-1})')
     end
     if YT_bool
         subplot(1,panes,pane_counter);
@@ -124,11 +120,7 @@ if ~length(handles.txy_data_windowed)==0
         xlabel('Y(mm)')
         ylabel('T(s)')
         h=colorbar;
-        if range_comp_bool
-            xlabel(h,sprintf('Count Density^{%.2f} (m^{-1}s^{-1})',dyn_range_pow))
-        else
-            xlabel(h,'Count Density (m^{-1}s^{-1})')
-        end
+        xlabel(h,'Count Density (m^{-1}s^{-1})')
     end
 
      %colormap(hot);
