@@ -33,17 +33,17 @@ if get(handles.oned_time_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
     shist_out=smooth_hist(handles.txy_data_windowed(:,1),'lims',[t_window_min,t_window_max],'sigma',T_bin_width);
-
-    plot(shist_out.bin.centers,shist_out.count_rate.smooth*1e-3,'k')
+    shist_out.count_rate.smooth=shist_out.count_rate.smooth*1e-3/num_files;
+    plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
     xlabel('t, time(s)');
     ylabel('Count Rate(kHz/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(1,:,:)=fit_cond(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1);
+            bmparam(1,:,:)=fit_condensate(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1);
         else  
-            fit_therm(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1,0);
+            fit_thermal(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1,0);
         end
     end
 
@@ -53,17 +53,16 @@ if get(handles.oned_X_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
     shist_out=smooth_hist(handles.txy_data_windowed(:,2),'lims',[xmin,xmax],'sigma',xybinw);
-    shist_out.bin.centers=shist_out.bin.centers*1e3; 
-    plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
+    plot(shist_out.bin.centers*1e-3,shist_out.count_rate.smooth,'k')
     xlabel('x(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(2,:,:)=fit_cond(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0);
+            bmparam(2,:,:)=fit_condensate(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0);
         else
-            fit_therm(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0,0);
+            fit_thermal(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0,0);
         end
     end
     
@@ -74,17 +73,16 @@ if get(handles.oned_Y_checkbox,'Value')
     dispcount=dispcount+width;
     
     shist_out=smooth_hist(handles.txy_data_windowed(:,3),'lims',[ymin,ymax],'sigma',xybinw);
-    shist_out.bin.centers=shist_out.bin.centers*1e3; 
-    plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
+    plot(shist_out.bin.centers*1e-3,shist_out.count_rate.smooth,'k')
     xlabel('y(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(3,:,:)=fit_cond(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0);
+            bmparam(3,:,:)=fit_condensate(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0);
         else
-            fit_therm(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0,0);
+            fit_thermal(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0,0);
         end
     end
 end
@@ -214,106 +212,9 @@ if get(handles.FFT_checkbox,'Value')
         ylabel('Flux amplitude modulation in m^{-1}/File |P1(f)|')
     end
     
-    
-    
-    
-  
-    
-    
 end
 
 
-% fit_temp_flag = handles.temp_fit;
-% 
-% if handles.tof_distribution == 1;
-%     
-%     z = .848; %fall distance of 848mm
-%     tau = .416; %fall time of 416ms
-%     TF_radius_s = get(handles.TF_radius_guesss_h,'String');%2e-4; %thomas fermi radius guess in seconds.  Add to front panel
-%     TF_radius = str2double(TF_radius_s);
-%     fr = 2000;  %(radial trapping freq)
-%     fa = 17;  %(Axial trapping freq)
-%     nmax = 200;
-%     T_guess_s = get(handles.T_guess_input_h,'String');%Temp guess for thermal cloud
-%     T_guess = 1e-6*str2double(T_guess_s);
-%     
-%     t = t_window_min:bin_size:t_window_max-bin_size;
-%     
-%     binned_time = zeros(floor((t_window_max-t_window_min)/bin_size),1);
-%     
-%     three_channel_output_sorted = handles.txy_data;
-%     
-%     count6a = size(three_channel_output_sorted);
-%     count6 = count6a(1);
-%     
-%     max_bin = floor(t_window_max/bin_size);
-%     min_bin = ceil(t_window_min/bin_size);
-%     
-%     for count7=1:count6
-%         bin_for_I_plot = ceil((three_channel_output_sorted(count7,1))/bin_size)-min_bin;
-%         if bin_for_I_plot > 0 && bin_for_I_plot < max_bin - min_bin
-%             binned_time(bin_for_I_plot) = binned_time(bin_for_I_plot) + 1;
-%         end
-%         
-%     end
-%     
-%     d = binned_time';
-%     hits_in_window = sum(binned_time);
-%     hits_in_window_s = num2str(hits_in_window);
-%     set(handles.num_hits_tof_h ,'String',hits_in_window_s);
-%     
-%     min_index = min(length(t),length(d));
-%     t = t(1:min_index);
-%     d = d(1:min_index);
-%     
-%     
-%     if fit_temp_flag == 1;
-%         plot_i_data = 0;
-%         plot_f_res = 1;
-%         [t,rw,y,thermID,condID,T,Tv0,TFr,thermfrac,condfrac,mu,N01,N02,Ntherm] =TC_and_below_b(z,tau,TF_radius,fr,fa,nmax,t,d,plot_i_data,plot_f_res,T_guess) ;
-%         TFr_str = num2str(TFr);
-%         set(handles.text48 ,'String',TFr_str);
-%         T_s = num2str(T*1e6);
-%         set(handles.fitted_temp_handle ,'String',T_s);
-%         thermfrac_s = num2str(thermfrac);
-%         set(handles.thermfrac_h ,'String',thermfrac_s);
-%         condfrac_s = num2str(condfrac);
-%         set(handles.condfrac_h ,'String',condfrac_s);
-%     else
-%         plot_i_data = 1;
-%         plot_f_res = 0;
-%         TC_and_below_b(z,tau,TF_radius,fr,fa,nmax,t,d,plot_i_data,plot_f_res,T_guess) ;
-% 
-%     end
-%     
-% else %otherwise just use thermal (gauss) dist
-%     
-%     
-%     
-%     [~,T,hits_in_window] = dld_tof_plotter_window_a(handles.txy_data_windowed,t_window_min,t_window_max,150,bin_size,fit_temp_flag,spatial_window);
-%     %[binned_time,T] = dld_tof_plotter(handles.txy_data,t_window_min_input,t_window_max_input,figure_number,bin_size,fit_temp_flag)
-%     hits_in_window_s = num2str(hits_in_window);
-%     set(handles.num_hits_tof_h ,'String',hits_in_window_s);
-%     
-%     if fit_temp_flag == 1;
-%         T_s = num2str(T*1e6);
-%         set(handles.fitted_temp_handle ,'String',T_s);
-% 	end
-%     
-% 	if get(handles.FFT_checkbox,'Value')
-% 		%pass to FFT processing:	
-% 		fprintf('FFT...')
-% 		tof__=handles.txy_data(:, 1);
-% 		tof__windowed= tof__(tof__<=t_window_max & tof__>t_window_min);
-% 		n_bins=max(tof__windowed)/bin_size;	
-% 		[amplitude_fft, t_fft]=hist(tof__windowed, n_bins);			
-% 		procFFT(amplitude_fft, t_fft);
-% 		clear amplitude_fft t_fft tof__windowed
-% 	end
-% end
-
-%change the mouse cursor to an arrow
-%set(handles.figure1,'Pointer','arrow');
 set(handles.status_handle ,'String','Idle');
 pause(1e-5)%this updates without stealing focus but allows button press unlike drawnow update
 
@@ -321,7 +222,7 @@ pause(1e-5)%this updates without stealing focus but allows button press unlike d
 
 end
 
-function fit_params=fit_therm(hObject,handles,xdata,ydata,istime,quiet)
+function fit_params=fit_thermal(hObject,handles,xdata,ydata,is_time_axis,quiet)
 %idealy this would be done with a constrained fit but ticky to implement in
 %matlab
 
@@ -338,20 +239,28 @@ mu_guess=wmean(xdata,ydata); %compute the weighted mean
 %mu_guess=(xmin+xmax)/2;
 sig_guess=sqrt(sum((xdata-mu_guess).^2.*ydata)/sum(ydata)); %compute the mean square weighted deviation
 fo = statset('TolFun',10^-6,...
-    'TolX',10^-10,...
-    'MaxIter',10^10,...
+    'TolX',1e-10,...
+    'MaxIter',1e4,...
     'UseParallel',1);
 % 'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))+off',...
 fitobject=fitnlm(xdata,ydata,...
     'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))',...
    [amp_guess,mu_guess,sig_guess],...
     'CoefficientNames',{'amp','mu','sig'},'Options',fo);
-x_sample_fit=linspace(min(xdata),max(xdata),300);
+
 fit_params=[fitobject.Coefficients.Estimate,fitobject.Coefficients.SE];
 
 if ~quiet
+    x_sample_fit=col_vec(linspace(min(xdata),max(xdata),1e3));
+    if is_time_axis
+        xscaling=1;
+    else
+        xscaling=1e-3;
+    end
+    [ysamp_val,ysamp_ci]=predict(fitobject,x_sample_fit,'Alpha',1-erf(1/sqrt(2)));
     hold on
-    plot(x_sample_fit,feval(fitobject,x_sample_fit),'r')
+    plot(xscaling*x_sample_fit,ysamp_ci,'color',[1,1,1].*0.5)
+    plot(xscaling*x_sample_fit,ysamp_val,'r')
     %legend('data','fit')
     hold off
     %other fit params
@@ -387,18 +296,18 @@ if ~quiet
     %handles.falltime = .416; %fall time of 416ms
 
 
-    if istime
+    if is_time_axis
         vdet=handles.grav*handles.falltime;
         width_units='s';
     else
-        vdet=1/1000; %to cancel the plot being in mm
+        vdet=1; %to cancel the plot being in mm
         width_units='mm';
     end
     
     fit_params(3,1)=fit_params(3,1)*vdet;
     fit_params(3,2)=fit_params(3,2)*vdet;
 
-    temperature_val=(abs(fit_params(3,1))/handles.falltime)^2 *handles.masshe/const.kb;
+    temperature_val=(abs(fit_params(3,1))/handles.falltime)^2 *const.mhe/const.kb;
     temperature_unc=temperature_val*2*fit_params(3,2)/abs(fit_params(3,1));
     temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'b');
     width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'b');
@@ -410,7 +319,7 @@ end
 end
 
 
-function fit_params=fit_cond(hObject,handles,xdata,ydata,istime)
+function fit_params=fit_condensate(hObject,handles,xdata,ydata,istime)
 %idealy this would be done with a constrained fit but ticky to implement in
 %matlab
 %roughly following https://arxiv.org/pdf/0811.4034.pdf
@@ -421,7 +330,7 @@ function fit_params=fit_cond(hObject,handles,xdata,ydata,istime)
 
 
 
-thermfitparms=fit_therm(hObject,handles,xdata,ydata,istime,1); %{'amp','mu','sig'}
+thermfitparms=fit_thermal(hObject,handles,xdata,ydata,istime,1); %{'amp','mu','sig'}
 
 
 amp_guess=thermfitparms(1,1);
