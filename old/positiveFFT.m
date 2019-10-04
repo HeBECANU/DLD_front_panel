@@ -1,3 +1,6 @@
+
+
+
 %taken from e80 cource at Harvey Mudd College
 
 function [X,freq]=positiveFFT(x,Fs)
