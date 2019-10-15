@@ -53,7 +53,7 @@ if get(handles.oned_X_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
     shist_out=smooth_hist(handles.txy_data_windowed(:,2),'lims',[xmin,xmax],'sigma',xybinw);
-    plot(shist_out.bin.centers*1e-3,shist_out.count_rate.smooth,'k')
+    plot(shist_out.bin.centers*1e3,shist_out.count_rate.smooth,'k')
     xlabel('x(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
@@ -73,7 +73,7 @@ if get(handles.oned_Y_checkbox,'Value')
     dispcount=dispcount+width;
     
     shist_out=smooth_hist(handles.txy_data_windowed(:,3),'lims',[ymin,ymax],'sigma',xybinw);
-    plot(shist_out.bin.centers*1e-3,shist_out.count_rate.smooth,'k')
+    plot(shist_out.bin.centers*1e3,shist_out.count_rate.smooth,'k')
     xlabel('y(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
@@ -255,7 +255,7 @@ if ~quiet
     if is_time_axis
         xscaling=1;
     else
-        xscaling=1e-3;
+        xscaling=1e3;
     end
     [ysamp_val,ysamp_ci]=predict(fitobject,x_sample_fit,'Alpha',1-erf(1/sqrt(2)));
     hold on
@@ -309,9 +309,9 @@ if ~quiet
 
     temperature_val=(abs(fit_params(3,1))/handles.falltime)^2 *const.mhe/const.kb;
     temperature_unc=temperature_val*2*fit_params(3,2)/abs(fit_params(3,1));
-    temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'b');
-    width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'b');
-    cen_str=string_value_with_unc(abs(fit_params(2,1)),fit_params(2,2),'b');
+    temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'type','b','separator',0);
+    width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'type','b','separator',0);
+    cen_str=string_value_with_unc(abs(fit_params(2,1)),fit_params(2,2),'type','b','separator',0);
     str=sprintf('Gauss fit \n   Cen %s %s \n   Width %s %s \nTemp.(no interactions)%s uk',...
         cen_str,width_units,width_str,width_units,temperature_str);
     text(0.01,0.9,str,'Units','normalized'); 
@@ -328,7 +328,11 @@ function fit_params=fit_condensate(hObject,handles,xdata,ydata,istime)
 %str = {'Straight Line Plot','from 1 to 10'};
 %annotation('textbox',dim,'String',str,'FitBoxToText','on','LineStyle','none');
 
-
+    if istime
+        xscaling=1;
+    else
+        xscaling=1e3;
+    end
 
 thermfitparms=fit_thermal(hObject,handles,xdata,ydata,istime,1); %{'amp','mu','sig'}
 
@@ -358,9 +362,9 @@ fitobject=fitnlm(xdata,ydata,modelfun,...
 xvalues=linspace(min(xdata),max(xdata),300);
 fit_params=[fitobject.Coefficients.Estimate,fitobject.Coefficients.SE];
 hold on
-plot(xvalues,justcond(fit_params(:,1),xvalues),'r--')
-plot(xvalues,justtherm(fit_params(:,1),xvalues),'r')
-plot(xvalues,bimod(fit_params(:,1),xvalues),'b')
+plot(xvalues.*xscaling,justcond(fit_params(:,1),xvalues),'r--')
+plot(xvalues.*xscaling,justtherm(fit_params(:,1),xvalues),'r')
+plot(xvalues.*xscaling,bimod(fit_params(:,1),xvalues),'b')
 %(xvalues,feval(fitobject,xvalues),'r')
 %legend('data','fit')
 hold off
@@ -381,7 +385,7 @@ if istime
     vdet=handles.grav*handles.falltime;
     units='s';
 else
-    vdet=1/1000; %to cancel the plot being in mm
+    vdet=1000; %to cancel the plot being in mm
     units='mm';
 end
 
@@ -407,7 +411,7 @@ countsGauss=abs((1/(sqrt(2*pi)*fit_params(5,1)))*ampgauss);
 Ncondfrac=countsTF/(countsTF+countsGauss);
 TonTc=(1-Ncondfrac)^(1/3);
 
-T=(abs(fit_params(5,1)))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
+T=(abs(fit_params(5,1)/vdet))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
 
 %should use 2.90 from pethick to correct for our cigar trap
 Tc=T/TonTc;
@@ -417,11 +421,11 @@ omegabar=(2*pi*2*pi*2*pi*handles.trapfreqrad*handles.trapfreqrad*handles.trapfre
 
 
 %handles.boltzconst*Tc=0.94*handles.hbar*omegabar*N^1/3
-Nest=(handles.boltzconst*Tc/(0.94*handles.hbar*omegabar))^3
+Nest=(handles.boltzconst*Tc/(0.94*handles.hbar*omegabar))^3;
 
-str=sprintf('GaussFit Radius %0.2±%0.1e%s \nTemp.(no interactions)%0.2ek\nTF radius %0.2±%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\n Tc %0.2ek\n Est. N %0.2e',...
+str=sprintf('GaussFit Radius %0.2e±%0.1e%s \nTemp.(no interactions)%0.2ek\nTF radius %0.2e±%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\nTc %0.2ek\nEst. N %0.2e',...
     abs(fit_params(3,1)),fit_params(3,2),units,T,abs(fit_params(5,1)),abs(fit_params(5,2)),units,Ncondfrac*100,TonTc*100,Tc,Nest);
-text(0.02,0.9,str,'Units','normalized','VerticalAlignment','top'); 
+text(0.02,0.9,str,'Units','normalized','VerticalAlignment','top','FontSize',14); 
 
 end
 
