@@ -32,37 +32,36 @@ fig = stfig('DLD Front Panel: 1d count rate pofiles');
 if get(handles.oned_time_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
-    shist_out=smooth_hist(handles.txy_data_windowed(:,1),'lims',[t_window_min,t_window_max],'sigma',T_bin_width);
-    shist_out.count_rate.smooth=shist_out.count_rate.smooth*1e-3/num_files;
-    plot(shist_out.bin.centers,shist_out.count_rate.smooth,'k')
+    shist_out_t=smooth_hist(handles.txy_data_windowed(:,1),'lims',[t_window_min,t_window_max],'sigma',T_bin_width);
+    shist_out_t.count_rate.smooth=shist_out_t.count_rate.smooth*1e-3/num_files;
+    plot(shist_out_t.bin.centers,shist_out_t.count_rate.smooth,'k')
     xlabel('t, time(s)');
     ylabel('Count Rate(kHz/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(1,:,:)=fit_condensate(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1);
+            bmparam(1,:,:)=fit_condensate(hObject,handles,shist_out_t.bin.centers,shist_out_t.count_rate.smooth,1);
         else  
-            fit_thermal(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,1,0);
+            fit_thermal(hObject,handles,shist_out_t.bin.centers,shist_out_t.count_rate.smooth,1,0);
         end
     end
-
 end
 
 if get(handles.oned_X_checkbox,'Value')
     subplot(totdisplays,width,dispcount)
     dispcount=dispcount+width;
-    shist_out=smooth_hist(handles.txy_data_windowed(:,2),'lims',[xmin,xmax],'sigma',xybinw);
-    plot(shist_out.bin.centers*1e3,shist_out.count_rate.smooth,'k')
+    shist_out_x=smooth_hist(handles.txy_data_windowed(:,2),'lims',[xmin,xmax],'sigma',xybinw);
+    plot(shist_out_x.bin.centers*1e3,shist_out_x.count_rate.smooth,'k')
     xlabel('x(mm)');
     ylabel('Linear Count Density (m^{-1}/File)');
     set(gcf,'Color',[1 1 1]);
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(2,:,:)=fit_condensate(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0);
+            bmparam(2,:,:)=fit_condensate(hObject,handles,shist_out_x.bin.centers,shist_out_x.count_rate.smooth,0);
         else
-            fit_thermal(hObject,handles,shist_out.bin.centers,shist_out.count_rate.smooth,0,0);
+            fit_thermal(hObject,handles,shist_out_x.bin.centers,shist_out_x.count_rate.smooth,0,0);
         end
     end
     
@@ -110,7 +109,7 @@ if get(handles.FFT_checkbox,'Value')
         f_window = fft_ax.XLim;
         h_window = fft_ax.YLim;
         dispcount=dispcount+width;
-        fft_out = fft_tx(t_centers,T1d_counts,'padding',10,'window','hamming');
+        fft_out = fft_tx(shist_out_t.bin.centers,shist_out_t.count_rate.raw,'padding',10,'window','hamming');
         fft_out=fft_out(:,start_clip:end);%remove part of the DC spike
         plot_time_fft=plot(fft_out(1,:),abs(fft_out(2,:)),'k');
         if get(handles.FFT_log_checkbox,'Value')
@@ -424,9 +423,11 @@ omegabar=(2*pi*2*pi*2*pi*handles.trapfreqrad*handles.trapfreqrad*handles.trapfre
 %handles.boltzconst*Tc=0.94*handles.hbar*omegabar*N^1/3
 Nest=(handles.boltzconst*Tc/(0.94*handles.hbar*omegabar))^3;
 
-str=sprintf('GaussFit Radius %s %s \nTemp.(no interactions)%s K\nTF radius %0.2e±%0.1e%s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\nTc %0.2ek\nEst. N %0.2e',...
+str=sprintf('GaussFit Radius %s %s \nTemp.(no interactions)%s nK\nTF radius %s %s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\nTc %0.2ek\nEst. N %0.2e',...
     string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2)),units,...
-    string_value_with_unc(T,dT),abs(fit_params(5,1)),abs(fit_params(5,2)),units,Ncondfrac*100,TonTc*100,Tc,Nest);
+    string_value_with_unc(T*1e9,dT*1e9),...
+    string_value_with_unc(abs(fit_params(5,1)),abs(fit_params(5,2))),units,...
+    Ncondfrac*100,TonTc*100,Tc,Nest);
 text(0.02,0.9,str,'Units','normalized','VerticalAlignment','top','FontSize',14); 
 
 end
