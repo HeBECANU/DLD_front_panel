@@ -21,6 +21,7 @@ function varargout = dld_front_panel(varargin)
 % 
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
+
 % 
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
