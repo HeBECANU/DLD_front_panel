@@ -1006,147 +1006,147 @@ function timerCallback(src,event,handles)
    end
 return
  
-function rot_angle_h_Callback(hObject, eventdata, handles)
-input = get(hObject,'String');
-
-%checks to see if input is empty. if so, default rotation angle is 0.61 rad
-if (isempty(input))
-    set(hObject,'String','0.61')
-end
-
-guidata(hObject, handles);
-
-% --- Executes during object creation, after setting all properties.
-function rot_angle_h_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-% --- Executes on selection change in num_hits_multi_files_h.
-function num_hits_multi_files_h_Callback(hObject, eventdata, handles)
-set(handles.num_hits_multi_files_h ,'String',hits_in_window_s);
-
-% --- Executes during object creation, after setting all properties.
-function num_hits_multi_files_h_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function TF_radius_guesss_h_Callback(hObject, eventdata, handles)
-input = get(hObject,'String');
-
-%checks to see if input is empty. if so, default rotation angle is 0.61 rad
-if (isempty(input))
-    set(hObject,'String','0.0002')
-end
-
-guidata(hObject, handles);
-
-% --- Executes during object creation, after setting all properties.
-function TF_radius_guesss_h_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function T_guess_input_h_Callback(hObject, eventdata, handles)
-input = get(hObject,'String');
-
-%checks to see if input is empty. if so, default rotation angle is 0.61 rad
-if (isempty(input))
-    set(hObject,'String','1')
-end
-
-guidata(hObject, handles);
-
-% --- Executes during object creation, after setting all properties.
-function T_guess_input_h_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-% --- Executes on button press in spatial_fit_checkbox.
-function spatial_fit_checkbox_Callback(hObject, eventdata, handles)
-checkboxStatus = get(handles.spatial_fit_checkbox,'Value');
-if (checkboxStatus)
-    handles.spatial_fit = 1;
-else
-    handles.spatial_fit = 0;
-end
-% Update handles structure
-guidata(hObject, handles);
-
-% --- Executes on button press in FFT_checkbox.
-function FFT_checkbox_Callback(hObject, eventdata, handles)
-
-% --- Executes on button press in TXY_checkbox.
-function TXY_checkbox_Callback(hObject, eventdata, handles)
-TXY_checkboxStatus = get(handles.TXY_checkbox,'Value');
-if (TXY_checkboxStatus)
-    handles.use_TXY = 1;
-else
-    handles.use_TXY = 0;
-end
-
-% Update handles structure
-guidata(hObject, handles);
-
-
-% --- Executes on key press with focus on t_window_max_h and none of its controls.
-function t_window_max_h_KeyPressFcn(hObject, eventdata, handles)
-currChar = get(handles.figure1,'CurrentCharacter');
-   if isequal(currChar,char(13)) %char(13) == enter key
-       tof_button_Callback(hObject, eventdata, guidata(hObject))
-       %call the pushbutton callback
-   end
-   
-guidata(hObject, handles);
-
-%This will replot the TOF on an enter key pressed in the t_min window
-
-% --- Executes on key press with focus on t_window_max_h and none of its controls.
-function t_window_min_h_KeyPressFcn(hObject, eventdata, handles)
-
-currChar = get(handles.figure1,'CurrentCharacter');
-   if isequal(currChar,char(13)) %char(13) == enter key
-       tof_button_Callback(hObject, eventdata, guidata(hObject))
-       %call the pushbutton callback
-   end
-   
-guidata(hObject, handles);
-
-
-% --- Executes on key press with focus on time_binsize and none of its controls.
-function time_binsize_KeyPressFcn(hObject, eventdata, handles)
-
-currChar = get(handles.figure1,'CurrentCharacter');
-   if isequal(currChar,char(13)) %char(13) == enter key
-       tof_button_Callback(hObject, eventdata, guidata(hObject))
-       %call the pushbutton callback
-   end
-guidata(hObject, handles);
-   
-% --- Executes during object creation, after setting all properties.
-function monitorrunbutton_CreateFcn(hObject, eventdata, handles)
-
-
-% --- Executes on key press with focus on filename_load and none of its controls.
-function filename_load_KeyPressFcn(hObject, eventdata, handles)
-currChar = get(handles.figure1,'CurrentCharacter');
-   if isequal(currChar,char(13)) %char(13) == enter key
-       pushbutton1_Callback(hObject, eventdata, guidata(hObject))
-       %call the pushbutton callback
-   end
-   guidata(hObject, handles);
-
-
-% --- Executes on key press with focus on start_file_h and none of its controls.
-function start_file_h_KeyPressFcn(hObject, eventdata, handles)
-currChar = get(handles.figure1,'CurrentCharacter');
-   if isequal(currChar,char(13)) %char(13) == enter key
-       pushbutton1_Callback(hObject, eventdata, guidata(hObject))
-       %call the pushbutton callback
-   end
-guidata(hObject, handles);
+% function rot_angle_h_Callback(hObject, eventdata, handles)
+% input = get(hObject,'String');
+% 
+% %checks to see if input is empty. if so, default rotation angle is 0.61 rad
+% if (isempty(input))
+%     set(hObject,'String','0.61')
+% end
+% 
+% guidata(hObject, handles);
+% 
+% % --- Executes during object creation, after setting all properties.
+% function rot_angle_h_CreateFcn(hObject, eventdata, handles)
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
+% 
+% % --- Executes on selection change in num_hits_multi_files_h.
+% function num_hits_multi_files_h_Callback(hObject, eventdata, handles)
+% set(handles.num_hits_multi_files_h ,'String',hits_in_window_s);
+% 
+% % --- Executes during object creation, after setting all properties.
+% function num_hits_multi_files_h_CreateFcn(hObject, eventdata, handles)
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
+% 
+% function TF_radius_guesss_h_Callback(hObject, eventdata, handles)
+% input = get(hObject,'String');
+% 
+% %checks to see if input is empty. if so, default rotation angle is 0.61 rad
+% if (isempty(input))
+%     set(hObject,'String','0.0002')
+% end
+% 
+% guidata(hObject, handles);
+% 
+% % --- Executes during object creation, after setting all properties.
+% function TF_radius_guesss_h_CreateFcn(hObject, eventdata, handles)
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
+% 
+% function T_guess_input_h_Callback(hObject, eventdata, handles)
+% input = get(hObject,'String');
+% 
+% %checks to see if input is empty. if so, default rotation angle is 0.61 rad
+% if (isempty(input))
+%     set(hObject,'String','1')
+% end
+% 
+% guidata(hObject, handles);
+% 
+% % --- Executes during object creation, after setting all properties.
+% function T_guess_input_h_CreateFcn(hObject, eventdata, handles)
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
+% 
+% % --- Executes on button press in spatial_fit_checkbox.
+% function spatial_fit_checkbox_Callback(hObject, eventdata, handles)
+% checkboxStatus = get(handles.spatial_fit_checkbox,'Value');
+% if (checkboxStatus)
+%     handles.spatial_fit = 1;
+% else
+%     handles.spatial_fit = 0;
+% end
+% % Update handles structure
+% guidata(hObject, handles);
+% 
+% % --- Executes on button press in FFT_checkbox.
+% function FFT_checkbox_Callback(hObject, eventdata, handles)
+% 
+% % --- Executes on button press in TXY_checkbox.
+% function TXY_checkbox_Callback(hObject, eventdata, handles)
+% TXY_checkboxStatus = get(handles.TXY_checkbox,'Value');
+% if (TXY_checkboxStatus)
+%     handles.use_TXY = 1;
+% else
+%     handles.use_TXY = 0;
+% end
+% 
+% % Update handles structure
+% guidata(hObject, handles);
+% 
+% 
+% % --- Executes on key press with focus on t_window_max_h and none of its controls.
+% function t_window_max_h_KeyPressFcn(hObject, eventdata, handles)
+% currChar = get(handles.figure1,'CurrentCharacter');
+%    if isequal(currChar,char(13)) %char(13) == enter key
+%        tof_button_Callback(hObject, eventdata, guidata(hObject))
+%        %call the pushbutton callback
+%    end
+%    
+% guidata(hObject, handles);
+% 
+% %This will replot the TOF on an enter key pressed in the t_min window
+% 
+% % --- Executes on key press with focus on t_window_max_h and none of its controls.
+% function t_window_min_h_KeyPressFcn(hObject, eventdata, handles)
+% 
+% currChar = get(handles.figure1,'CurrentCharacter');
+%    if isequal(currChar,char(13)) %char(13) == enter key
+%        tof_button_Callback(hObject, eventdata, guidata(hObject))
+%        %call the pushbutton callback
+%    end
+%    
+% guidata(hObject, handles);
+% 
+% 
+% % --- Executes on key press with focus on time_binsize and none of its controls.
+% function time_binsize_KeyPressFcn(hObject, eventdata, handles)
+% 
+% currChar = get(handles.figure1,'CurrentCharacter');
+%    if isequal(currChar,char(13)) %char(13) == enter key
+%        tof_button_Callback(hObject, eventdata, guidata(hObject))
+%        %call the pushbutton callback
+%    end
+% guidata(hObject, handles);
+%    
+% % --- Executes during object creation, after setting all properties.
+% function monitorrunbutton_CreateFcn(hObject, eventdata, handles)
+% 
+% 
+% % --- Executes on key press with focus on filename_load and none of its controls.
+% function filename_load_KeyPressFcn(hObject, eventdata, handles)
+% currChar = get(handles.figure1,'CurrentCharacter');
+%    if isequal(currChar,char(13)) %char(13) == enter key
+%        pushbutton1_Callback(hObject, eventdata, guidata(hObject))
+%        %call the pushbutton callback
+%    end
+%    guidata(hObject, handles);
+% 
+% 
+% % --- Executes on key press with focus on start_file_h and none of its controls.
+% function start_file_h_KeyPressFcn(hObject, eventdata, handles)
+% currChar = get(handles.figure1,'CurrentCharacter');
+%    if isequal(currChar,char(13)) %char(13) == enter key
+%        pushbutton1_Callback(hObject, eventdata, guidata(hObject))
+%        %call the pushbutton callback
+%    end
+% guidata(hObject, handles);
 
 
 
@@ -1174,25 +1174,25 @@ mask=handles.txy_data(:,1)>t_window_min & handles.txy_data(:,1)<t_window_max...
 handles.txy_data_windowed=handles.txy_data(mask,:);
 guidata(hObject, handles);
     
-function spatial_bins_h_Callback(hObject, eventdata, handles)
-
-% --- Executes during object creation, after setting all properties.
-function spatial_bins_h_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% function spatial_bins_h_Callback(hObject, eventdata, handles)
+% 
+% % --- Executes during object creation, after setting all properties.
+% function spatial_bins_h_CreateFcn(hObject, eventdata, handles)
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
 
 
 % --- Executes on button press in XY_checkbox.
-function XY_checkbox_Callback(hObject, eventdata, handles)
-
-% --- Executes on button press in XT_checkbox.
-function XT_checkbox_Callback(hObject, eventdata, handles)
-
-% --- Executes on button press in YT_checkbox.
-function YT_checkbox_Callback(hObject, eventdata, handles)
-
-function velocity_h_Callback(hObject, eventdata, handles)
+% function XY_checkbox_Callback(hObject, eventdata, handles)
+% 
+% % --- Executes on button press in XT_checkbox.
+% function XT_checkbox_Callback(hObject, eventdata, handles)
+% 
+% % --- Executes on button press in YT_checkbox.
+% function YT_checkbox_Callback(hObject, eventdata, handles)
+% 
+% function velocity_h_Callback(hObject, eventdata, handles)
 % hObject    handle to velocity_h (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1202,22 +1202,22 @@ function velocity_h_Callback(hObject, eventdata, handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function velocity_h_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-function Hold_zoom_callback(hObject, eventdata,handles)
-    
-    hold_checkboxStatus = get(handles.zoom_checkbox,'Value');
-    if (hold_checkboxStatus)
-        handles.hold_Zoom = 1;
-    else
-        handles.hold_Zoom = 0;
-    end
-    % Update handles structure
-    guidata(hObject, handles);
+% function velocity_h_CreateFcn(hObject, eventdata, handles)
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
+% 
+% 
+% function Hold_zoom_callback(hObject, eventdata,handles)
+%     
+%     hold_checkboxStatus = get(handles.zoom_checkbox,'Value');
+%     if (hold_checkboxStatus)
+%         handles.hold_Zoom = 1;
+%     else
+%         handles.hold_Zoom = 0;
+%     end
+%     % Update handles structure
+%     guidata(hObject, handles);
     
 
 
@@ -1239,78 +1239,78 @@ else
 end
 
 
-% --- Executes on button press in FFT_log_checkbox.
-function FFT_log_checkbox_Callback(hObject, eventdata, handles)
+% % --- Executes on button press in FFT_log_checkbox.
+% function FFT_log_checkbox_Callback(hObject, eventdata, handles)
+% 
+% 
+% 
+% function spatial_blur_Callback(hObject, eventdata, handles)
+% 
+% 
+% % --- Executes during object creation, after setting all properties.
+% function spatial_blur_CreateFcn(hObject, eventdata, handles)
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
+% 
+% 
+% % --- Executes on button press in LogScale2d_checkbox.
+% function LogScale2d_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to LogScale2d_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of LogScale2d_checkbox
+% 
+% 
+% % --- Executes on button press in oned_time_checkbox.
+% function oned_time_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to oned_time_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of oned_time_checkbox
+% 
+% 
+% % --- Executes on button press in oned_X_checkbox.
+% function oned_X_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to oned_X_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of oned_X_checkbox
+% 
+% 
+% % --- Executes on button press in oned_Y_checkbox.
+% function oned_Y_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to oned_Y_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of oned_Y_checkbox
 
 
 
-function spatial_blur_Callback(hObject, eventdata, handles)
+% function oned_spatial_bins_h_Callback(hObject, eventdata, handles)
+% % hObject    handle to oned_spatial_bins_h (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hints: get(hObject,'String') returns contents of oned_spatial_bins_h as text
+% %        str2double(get(hObject,'String')) returns contents of oned_spatial_bins_h as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function spatial_blur_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in LogScale2d_checkbox.
-function LogScale2d_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to LogScale2d_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of LogScale2d_checkbox
-
-
-% --- Executes on button press in oned_time_checkbox.
-function oned_time_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to oned_time_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of oned_time_checkbox
-
-
-% --- Executes on button press in oned_X_checkbox.
-function oned_X_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to oned_X_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of oned_X_checkbox
-
-
-% --- Executes on button press in oned_Y_checkbox.
-function oned_Y_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to oned_Y_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of oned_Y_checkbox
-
-
-
-function oned_spatial_bins_h_Callback(hObject, eventdata, handles)
-% hObject    handle to oned_spatial_bins_h (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of oned_spatial_bins_h as text
-%        str2double(get(hObject,'String')) returns contents of oned_spatial_bins_h as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function oned_spatial_bins_h_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to oned_spatial_bins_h (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% function oned_spatial_bins_h_CreateFcn(hObject, eventdata, handles)
+% % hObject    handle to oned_spatial_bins_h (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    empty - handles not created until after all CreateFcns called
+% 
+% % Hint: edit controls usually have a white background on Windows.
+% %       See ISPC and COMPUTER.
+% if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+%     set(hObject,'BackgroundColor','white');
+% end
 
 
 
@@ -1336,70 +1336,70 @@ pause(1e-5)%this updates without stealing focus but allows button press unlike d
 guidata(hObject, handles);
 
 
-% --- Executes on button press in avg_pos_fft_checkbox.
-function avg_pos_fft_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to avg_pos_fft_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of avg_pos_fft_checkbox
-
-
-% --- Executes on button press in avg_pos_fft_log_checkbox.
-function avg_pos_fft_log_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to avg_pos_fft_log_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of avg_pos_fft_log_checkbox
-
-
-% --- Executes on button press in plot_3d_rot_checkbox.
-function plot_3d_rot_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_3d_rot_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of plot_3d_rot_checkbox
-
-
-% --- Executes on button press in oned_fit_checkbox.
-function oned_fit_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to oned_fit_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% Hint: get(hObject,'Value') returns toggle state of oned_fit_checkbox
-
-
-% --- Executes on button press in fit_bimod_checkbox.
-function fit_bimod_checkbox_Callback(hObject, eventdata, handles)
-% hObject    handle to fit_bimod_checkbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on key press with focus on t_min_2d_handle and none of its controls.
-function t_min_2d_handle_KeyPressFcn(hObject, eventdata, handles)
-currChar = get(handles.figure1,'CurrentCharacter');
-   if isequal(currChar,char(13)) %char(13) == enter key
-       plot_2d_button_Callback(hObject, eventdata, handles)
-       %call the pushbutton callback
-   end
-guidata(hObject, handles);
-   
-
-% --- Executes on key press with focus on t_max_2d_handle and none of its controls.
-function t_max_2d_handle_KeyPressFcn(hObject, eventdata, handles)
-currChar = get(handles.figure1,'CurrentCharacter');
-   if isequal(currChar,char(13)) %char(13) == enter key
-       plot_2d_button_Callback(hObject, eventdata, handles)
-       %call the pushbutton callback
-   end
-guidata(hObject, handles);
+% % --- Executes on button press in avg_pos_fft_checkbox.
+% function avg_pos_fft_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to avg_pos_fft_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of avg_pos_fft_checkbox
+% 
+% 
+% % --- Executes on button press in avg_pos_fft_log_checkbox.
+% function avg_pos_fft_log_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to avg_pos_fft_log_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of avg_pos_fft_log_checkbox
+% 
+% 
+% % --- Executes on button press in plot_3d_rot_checkbox.
+% function plot_3d_rot_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to plot_3d_rot_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of plot_3d_rot_checkbox
+% 
+% 
+% % --- Executes on button press in oned_fit_checkbox.
+% function oned_fit_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to oned_fit_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% % Hint: get(hObject,'Value') returns toggle state of oned_fit_checkbox
+% 
+% 
+% % --- Executes on button press in fit_bimod_checkbox.
+% function fit_bimod_checkbox_Callback(hObject, eventdata, handles)
+% % hObject    handle to fit_bimod_checkbox (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% 
+% % --- Executes on key press with focus on t_min_2d_handle and none of its controls.
+% function t_min_2d_handle_KeyPressFcn(hObject, eventdata, handles)
+% currChar = get(handles.figure1,'CurrentCharacter');
+%    if isequal(currChar,char(13)) %char(13) == enter key
+%        plot_2d_button_Callback(hObject, eventdata, handles)
+%        %call the pushbutton callback
+%    end
+% guidata(hObject, handles);
+%    
+% 
+% % --- Executes on key press with focus on t_max_2d_handle and none of its controls.
+% function t_max_2d_handle_KeyPressFcn(hObject, eventdata, handles)
+% currChar = get(handles.figure1,'CurrentCharacter');
+%    if isequal(currChar,char(13)) %char(13) == enter key
+%        plot_2d_button_Callback(hObject, eventdata, handles)
+%        %call the pushbutton callback
+%    end
+% guidata(hObject, handles);
 
 
 % --- Executes on key press with focus on tof_button and none of its controls.
-function tof_button_KeyPressFcn(hObject, eventdata, handles)
+% function tof_button_KeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to tof_button (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
 %	Key: name of the key that was pressed, in lower case
