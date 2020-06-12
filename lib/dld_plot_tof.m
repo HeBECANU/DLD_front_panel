@@ -226,7 +226,7 @@ function fit_params=fit_thermal(hObject,handles,xdata,ydata,is_time_axis,quiet)
 %matlab
 
 global const
-
+tf=handles.falltime;%fall_time
 %dim = [0.2 0.6 0.3 0.3];
 %str = {'Straight Line Plot','from 1 to 10'};
 %annotation('textbox',dim,'String',str,'FitBoxToText','on','LineStyle','none');
@@ -234,7 +234,7 @@ amp_guess=max(ydata);
 a=xlim; %cant seem to do [a,b]=xlim
 xmin=a(1);
 xmax=a(2);
-mu_guess=wmean(xdata,ydata); %compute the weighted mean
+mu_guess=wmean(xdata,ydata)-tf; %compute the weighted mean
 %mu_guess=(xmin+xmax)/2;
 sig_guess=sqrt(sum((xdata-mu_guess).^2.*ydata)/sum(ydata)); %compute the mean square weighted deviation
 fo = statset('TolFun',10^-6,...
@@ -242,8 +242,10 @@ fo = statset('TolFun',10^-6,...
     'MaxIter',1e4,...
     'UseParallel',1);
 % 'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))+off',...
+% 'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))'
+therm_fun1d = @(b,x) b(1).*exp(-(((x-b(2))-tf^2./(x-b(2))).^2)./(2*b(3).^2)).*(1+tf^2./(x-b(2)).^2);
 fitobject=fitnlm(xdata,ydata,...
-    'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))',...
+    therm_fun1d,...
    [amp_guess,mu_guess,sig_guess],...
     'CoefficientNames',{'amp','mu','sig'},'Options',fo);
 
@@ -306,7 +308,7 @@ if ~quiet
     fit_params(3,1)=fit_params(3,1)*vdet;
     fit_params(3,2)=fit_params(3,2)*vdet;
 
-    temperature_val=(abs(fit_params(3,1))/handles.falltime)^2 *const.mhe/const.kb;
+    temperature_val=(abs(fit_params(3,1))/handles.falltime/2)^2 *const.mhe/const.kb;
     temperature_unc=temperature_val*2*fit_params(3,2)/abs(fit_params(3,1));
     temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'type','b','separator',0);
     width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'type','b','separator',0);
