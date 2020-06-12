@@ -68,9 +68,9 @@ function varargout = dld_front_panel(varargin)
 
 
 %add all subfolders to the path
-this_folder = fileparts(which(mfilename));
-% Add that folder plus all subfolders to the path.
-addpath(genpath(this_folder));
+addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path
+set_up_project_path('.', {'dev','lib','bin'})
+
 
 
 % Begin initialization code - DO NOT EDIT
@@ -305,6 +305,19 @@ for n = 1:num_files
     end%stop condition
 end%looping over files
 
+
+%% remove hot spots 2019-11-20
+% first jam into the standard data stucutre 
+% the above code should really be heavily modified to use our standard data structure
+if get(handles.hotspot_checkbox,'Value') && files_imported~=0
+    data=[]; 
+    data.mcp_tdc.counts_txy=three_channel_output;
+    data.mcp_tdc.num_counts=cellfun(@(x) size(x,1),data.mcp_tdc.counts_txy);
+    data=hotspot_mask(data);
+    three_channel_output=data.mcp_tdc.masked.counts_txy;
+end
+
+%% cat all the counts together
 if files_imported~=0
     %need to handle the fail case better
     three_channel_output=vertcat(three_channel_output{:});
@@ -314,6 +327,8 @@ end
 assignin('base','numhits',num_hits_mat); %asigns to the main matlab workspace
 
 handles.files_imported=files_imported; 
+%%
+
 handles.txy_data = three_channel_output;
 handles.num_hits = number_hits;
 
