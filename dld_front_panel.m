@@ -68,9 +68,6 @@ function varargout = dld_front_panel(varargin)
 %example to stop the import
 
 
-%add all subfolders to the path
-addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path
-set_up_project_path('.', {'dev','lib','bin'})
 
 
 
@@ -99,6 +96,11 @@ function dld_front_panel_OpeningFcn(hObject, eventdata, handles, varargin)
 %BEGIN USER VAR-----------------------------------------------------------
 %These are some tweaks for the program that are a bit to complex for the
 %gui
+
+%add all subfolders to the path
+addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path
+set_up_project_path('.', {'dev','lib','bin'})
+
 
 hebec_constants 
 
