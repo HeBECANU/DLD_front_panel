@@ -106,14 +106,15 @@ hebec_constants
 
 handles.files_imported=0;
 handles.falldist = .848; %fall distance of 848mm
-handles.falltime = .416; %fall time of 416ms
+handles.falltime = 0.416; %fall time of 416ms
 handles.trapfreqrad=500;
 handles.trapfreqaxial=50;
 handles.grav=9.7961; %from https://d28rz98at9flks.cloudfront.net/12293/Rec1969_034.pdf
 handles.boltzconst=1.38064852*10^-23; %J/K
 handles.hbar=1.0545718*10^(-34);
 handles.masshe=6.6464*10^-27; %mass in kg
-
+handles.switchoff=22.954;
+handles.dldtrig=20.3;
 handles.auto_press_TOF=1;   %runs the Plot TOF button when read data is done
 handles.auto_press_2d=1;    %same but for 2d plot 
 handles.auto_press_3d=0;    %same but for 3d plot 
@@ -276,7 +277,7 @@ for n = 1:num_files
         end
         if ~no_file %is there a file to process
             number_hits_single=size(three_channel_output_single,1);
-            if number_hits_single < 1000   %return sub 100 hits in file
+            if number_hits_single < 0%1000   %return sub 100 hits in file
                 disp('zero counts encountered')
                 low_files=low_files+1;
                 set(handles.num_low_files,'String',low_files);
@@ -784,7 +785,7 @@ while mon_continue
 %                 t = 0:(1/fs):0.02;
 %                 f = 2000;
 %                 a = 0.2;
-%                 y = a*sin(2*pi*f*t);
+%                 y = a*sin(2*pi*f*t);ewe
 %                 sound(y, fs);
 %             end
 
@@ -1026,9 +1027,9 @@ return
 function rot_angle_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
 
-%checks to see if input is empty. if so, default rotation angle is 0.61 rad
+%checks to see if input is empty. if so, default rotation angle is 0.93 rad
 if (isempty(input))
-    set(hObject,'String','0.61')
+    set(hObject,'String','0.93')
 end
 
 guidata(hObject, handles);
@@ -1052,7 +1053,7 @@ end
 function TF_radius_guesss_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
 
-%checks to see if input is empty. if so, default rotation angle is 0.61 rad
+%checks to see if input is empty. if so, default rotation angle is 0.93 rad
 if (isempty(input))
     set(hObject,'String','0.0002')
 end
@@ -1068,7 +1069,7 @@ end
 function T_guess_input_h_Callback(hObject, eventdata, handles)
 input = get(hObject,'String');
 
-%checks to see if input is empty. if so, default rotation angle is 0.61 rad
+%checks to see if input is empty. if so, default rotation angle is 0.93 rad
 if (isempty(input))
     set(hObject,'String','1')
 end

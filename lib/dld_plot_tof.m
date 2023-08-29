@@ -41,7 +41,7 @@ if get(handles.oned_time_checkbox,'Value')
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(1,:,:)=fit_condensate(hObject,handles,shist_out_t.bin.centers,shist_out_t.count_rate.smooth,1);
+            bmparam(1,:,:)=fit_condensate(hObject,handles,shist_out_t.bin.centers,shist_out_t.count_rate.smooth,1);%count_rate
         else  
             fit_thermal(hObject,handles,shist_out_t.bin.centers,shist_out_t.count_rate.smooth,1,0);
         end
@@ -59,7 +59,7 @@ if get(handles.oned_X_checkbox,'Value')
     
     if get(handles.oned_fit_checkbox,'Value')
         if get(handles.fit_bimod_checkbox,'Value') 
-            bmparam(2,:,:)=fit_condensate(hObject,handles,shist_out_x.bin.centers,shist_out_x.count_rate.smooth,0);
+            bmparam(2,:,:)=fit_condensate(hObject,handles,shist_out_x.bin.centers,shist_out_x.count_rate.smooth,0);%count_rate
         else
             fit_thermal(hObject,handles,shist_out_x.bin.centers,shist_out_x.count_rate.smooth,0,0);
         end
@@ -234,7 +234,8 @@ amp_guess=max(ydata);
 a=xlim; %cant seem to do [a,b]=xlim
 xmin=a(1);
 xmax=a(2);
-mu_guess=wmean(xdata,ydata)-tf; %compute the weighted mean
+mu_guess=wmean(xdata,ydata)%-tf; %compute the weighted mean
+centre_guess=(handles.switchoff+tf)-handles.dldtrig;
 %mu_guess=(xmin+xmax)/2;
 sig_guess=sqrt(sum((xdata-mu_guess).^2.*ydata)/sum(ydata)); %compute the mean square weighted deviation
 fo = statset('TolFun',10^-6,...
@@ -243,10 +244,14 @@ fo = statset('TolFun',10^-6,...
     'UseParallel',1);
 % 'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))+off',...
 % 'y~amp*exp(-1*((x1-mu)^2)/(2*sig^2))'
-therm_fun1d = @(b,x) b(1).*exp(-(((x-b(2))-tf^2./(x-b(2))).^2)./(2*b(3).^2)).*(1+tf^2./(x-b(2)).^2);
+% therm_fun1d = @(b,x) b(1).*exp(-(((x-b(2))-tf^2./(x-b(2))).^2)./(2*b(3).^2)).*(1+tf^2./(x-b(2)).^2);
+% therm_fun1d = @(b,x) b(1).*exp(-(((x-b(2)).^2)./(2*b(3).^2))); %simple gaussian approximation
+therm_fun1d = @(b,x) b(1).*exp(-((((x).^2-b(2)^2)./(x)).^2)./(2*b(3).^2)).*(1+b(2)^2./(x).^2); 
+
+
 fitobject=fitnlm(xdata,ydata,...
     therm_fun1d,...
-   [amp_guess,mu_guess,sig_guess],...
+   [amp_guess,centre_guess,sig_guess],...
     'CoefficientNames',{'amp','mu','sig'},'Options',fo);
 
 fit_params=[fitobject.Coefficients.Estimate,fitobject.Coefficients.SE];
@@ -295,20 +300,25 @@ if ~quiet
     
     %handles.falldist = .848; %fall distance of 848mm
     %handles.falltime = .416; %fall time of 416ms
-
-
+    fit_params(3,1)
+    size(xdata)
+    
     if is_time_axis
         vdet=handles.grav*handles.falltime;
+        fprintf("\ntime axis 1")
         width_units='s';
     else
-        vdet=1; %to cancel the plot being in mm
-        width_units='mm';
+        vdet=1;%1; %to cancel the plot being in mm
+        width_units='m';
     end
     
-    fit_params(3,1)=fit_params(3,1)*vdet;
+    fit_params(3,1)=fit_params(3,1)*vdet; %converting to spatial width
     fit_params(3,2)=fit_params(3,2)*vdet;
 
-    temperature_val=(abs(fit_params(3,1))/handles.falltime/2)^2 *const.mhe/const.kb;
+    temperature_val=0.25*(abs(fit_params(3,1))/handles.falltime)^2 *const.mhe/const.kb;
+%   temperature_val=abs(fit_params(3,1)/vdet).^2*const.mhe/const.kb*(const.g0/2)^2;
+    %temperature_val = (abs(fit_params(3,1))/handles.falltime)^2 * const.mhe/const.kb;
+    
     temperature_unc=temperature_val*2*fit_params(3,2)/abs(fit_params(3,1));
     temperature_str=string_value_with_unc(1e6*temperature_val,1e6*temperature_unc,'type','b','separator',0);
     width_str=string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'type','b','separator',0);
@@ -321,6 +331,7 @@ end
 
 
 function fit_params=fit_condensate(hObject,handles,xdata,ydata,istime)
+
 %idealy this would be done with a constrained fit but ticky to implement in
 %matlab
 %roughly following https://arxiv.org/pdf/0811.4034.pdf
@@ -338,12 +349,12 @@ function fit_params=fit_condensate(hObject,handles,xdata,ydata,istime)
 thermfitparms=fit_thermal(hObject,handles,xdata,ydata,istime,1); %{'amp','mu','sig'}
 
 
-amp_guess=thermfitparms(1,1);
+amp_guess=thermfitparms(1,1)*4;
 a=xlim; %cant seem to do [a,b]=xlim
 xmin=a(1);
 xmax=a(2);
-mu_guess=thermfitparms(2,1);
-sig_guess=thermfitparms(3,1);
+mu_guess=wmean(xdata,ydata);%thermfitparms(2,1);
+sig_guess=thermfitparms(3,1)/3;
 %sig_guess=(xmax-xmin)/1; %seems better to overestimate the width by a lot
 fo = statset('TolFun',10^-8,...
     'TolX',10^-10,...
@@ -355,9 +366,15 @@ fo = statset('TolFun',10^-8,...
     %3 TF rad
     %4 gauss peak height
     %5 gauss width
-modelfun=@bimod;
+if istime
+    modelfun=@yav_parab;
+else
+    modelfun=@bimod;
+end
+%modelfun=@bimod;
+%modelfun=@yav_parab;
 fitobject=fitnlm(xdata,ydata,modelfun,...
-   [amp_guess,mu_guess,sig_guess/10,amp_guess,sig_guess],'Options',fo);
+   [amp_guess*3,mu_guess,sig_guess,amp_guess/10,sig_guess*2],'Options',fo);
 
 
 xvalues=linspace(min(xdata),max(xdata),300);
@@ -386,8 +403,8 @@ if istime
     vdet=handles.grav*handles.falltime;
     units='s';
 else
-    vdet=1000; %to cancel the plot being in mm
-    units='mm';
+    vdet=1; %to cancel the plot being in mm
+    units='m';
 end
 
 %1 parabola height (unnorm)
@@ -398,22 +415,66 @@ end
     
 fit_params(3,1)=fit_params(3,1)*vdet;
 fit_params(3,2)=fit_params(3,2)*vdet;
-fit_params(5,1)=fit_params(5,1)*vdet;
+fit_params(5,1)=fit_params(5,1)*vdet
 fit_params(5,2)=fit_params(5,2)*vdet;
 
-
+max(xdata);
  %here i basicaly integrate under the curve and find the ratio
 %to give Nc/Ntot beause i have changed the scale of the plots to put things
 %into nice units the absolout value of the counts is a bit odd
 ampTF=fit_params(1,1);
 ampgauss=fit_params(4,1);
-countsTF=abs((1/(4*fit_params(3,1)))*ampTF);
+
+countsTF=abs((1/(4*fit_params(3,1)))*ampTF);%
 countsGauss=abs((1/(sqrt(2*pi)*fit_params(5,1)))*ampgauss);
+
+% 
+% cenTF = fit_params(3,1);
+% justcond(fit_params_TF(:), xdata)
+% parabola_area = (2/3)*cenTF*ampTF
+% countsTF = parabola_area
+% 
+% step_size = (xdata(3509)-xdata(3508))%*xscaling
+% size(xdata)
+% fit_params_TF = fit_params(:,1);
+% fit_params_TF([3,5]) = fit_params([3,5],1)./vdet;
+% size(justcond(fit_params_TF(:), xdata))
+% countsTFT = sum(justcond(fit_params_TF(:), xdata))*step_size*1000
+
+
+%% Changes
+% step_size = (xdata(2)-xdata(1));%*xscaling
+% xTFdata = xdata(:)>(fit_params(2,1)-fit_params(3,1)) & xdata(:)<(fit_params(2,1)+fit_params(3,1));
+% 
+% fgf = @(x) justcond(fit_params(:,1), x);
+% sgf = integral(fgf,min(xdata(xTFdata)),max(xdata(xTFdata)),'ArrayValued',true);
+% 
+% 
+% countsTF = (sum(justcond(fit_params, xdata(xTFdata))))*step_size %sgf 
+% countsGauss=ampgauss*fit_params(5,1)/0.3989
+
+%%
 Ncondfrac=countsTF/(countsTF+countsGauss);
 TonTc=(1-Ncondfrac)^(1/3);
+%handles.masshe = 3/4*handles.masshe;
 
-T=(abs(fit_params(5,1)/vdet))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
-dT=(abs(fit_params(5,2)/vdet))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);
+if fit_params(5,2) <= 1e-9
+    fit_params(5,2) = 1e-13*1e9;
+end
+
+
+if istime
+    T = 0.25*(abs(fit_params(5,1))/handles.falltime)^2 *handles.masshe /handles.boltzconst;
+    dT= 0.25*(abs(fit_params(5,2))/handles.falltime)^2 *handles.masshe /handles.boltzconst;
+else
+    T = (abs(fit_params(5,1))/handles.falltime)^2 *handles.masshe /handles.boltzconst;
+    dT= (abs(fit_params(5,2))/handles.falltime)^2 *handles.masshe /handles.boltzconst;
+end
+
+%T=(abs(fit_params(3,1)))^2 *handles.masshe /(handles.boltzconst * handles.falltime^2)%/vdet
+%T = 0.25*(abs(fit_params(5,1))/handles.falltime)^2 *handles.masshe /handles.boltzconst
+%dT= (abs(fit_params(5,2)))^2 *handles.masshe /(handles.boltzconst*handles.falltime^2);%/vdet
+%dT= (abs(fit_params(5,2))/handles.falltime)^2 *handles.masshe /handles.boltzconst;
 
 %should use 2.90 from pethick to correct for our cigar trap
 Tc=T/TonTc;
@@ -421,14 +482,16 @@ Tc=T/TonTc;
 omegabar=(2*pi*2*pi*2*pi*handles.trapfreqrad*handles.trapfreqrad*handles.trapfreqaxial)^(1/3);
 
 
-
 %handles.boltzconst*Tc=0.94*handles.hbar*omegabar*N^1/3
 Nest=(handles.boltzconst*Tc/(0.94*handles.hbar*omegabar))^3;
+fit_params(2,1);
+fit_params(2,2);
 
-str=sprintf('Bimodal Fit \nGaussFit Radius %s %s \nTemp.(no interactions)%s nK\nTF radius %s %s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\nTc %0.2ek\nEst. N %0.2e',...
-    string_value_with_unc(abs(fit_params(3,1)),fit_params(3,2),'type','b','separator',0),units,...
+str=sprintf('Bimodal Fit \nGaussFit Radius %s %s \nGaussfit Center %s %s \nTemp.(no interactions)%s nK\nTF radius %s %s\nCondensate fraction %0.1f%%\nT/Tc %0.1f%%\nTc %0.2ek\nEst. N %0.2e',...
+    string_value_with_unc(abs(fit_params(5,1)),fit_params(5,2),'type','b','separator',0),units,...
+    string_value_with_unc(abs(fit_params(2,1)),fit_params(2,2),'type','b','separator',0),units,...
     string_value_with_unc(T*1e9,dT*1e9,'type','b','separator',0),...
-    string_value_with_unc(abs(fit_params(5,1)),abs(fit_params(5,2)),'type','b','separator',0),units,...
+    string_value_with_unc(abs(fit_params(3,1)),abs(fit_params(3,2)),'type','b','separator',0),units,...
     Ncondfrac*100,TonTc*100,Tc,Nest);
 text(0.02,0.9,str,'Units','normalized','VerticalAlignment','top','FontSize',14); 
 
@@ -450,6 +513,17 @@ therm=b(4)*exp(-1*((x(:)-b(2)).^2)./(2.*b(5).^2));
 out=real(b(1).*max(zerosformax,parabola)+therm);
 end
 
+function out=yav_parab(b,x)
+b(3)=abs(b(3)); %makes the TF radius pos
+b(4)=abs(b(4)); % gauss peak pos
+b(1)=abs(b(1)); %cond height pos
+tf = 0.416;
+parabola=(1-((x(:)-b(2))./b(3)).^2).^(3/2);
+zerosformax=zeros(length(parabola),1);
+yav=b(4)*exp(-((((x(:)-b(2)).^2-tf^2)./(x(:)-b(2))).^2)./(2.*b(5).^2)).*(1+tf^2./(x(:)-b(2)).^2);
+% yav=b(4)*exp(-1*((x(:)-b(2)).^2)./(2.*b(5).^2));
+out=real(b(1).*max(zerosformax,parabola)+yav);
+end
 function out=justcond(b,x)
   %1 parabola height (unnorm)
     %2 center
@@ -482,5 +556,5 @@ b(4)=abs(b(4)); % gauss peak pos
 b(1)=abs(b(1)); %cond height pos
 
 out=b(4)*exp(-1*((x(:)-b(2)).^2)./(2.*b(5).^2));
+%out=b(1)*exp(-1*((x(:)-b(2)).^2)./(2.*b(3).^2));
 end
- 
